@@ -2,10 +2,12 @@ from mesa import Agent, Model
 from mesa.time import SimultaneousActivation
 from mesa.space import NetworkGrid
 from mesa.datacollection import DataCollector
+from census_data import *
 
 import random
 import math
 import networkx as nx
+import matplotlib.pyplot as plt
 
 tick = 0  # counter for current time step
 
@@ -99,12 +101,25 @@ def createGraph():
     # use pandas to manipulate county demographic data & climate data
     # add attributes to nodes via dictionaries as in line (109)
 
-    G = nx.complete_graph(3)
-    G.node[0]['name'] = 'los angeles'
-    G.node[1]['name'] = 'anchorage'
-    G.node[2]['name'] = 'portland'
+    mult = cleanAgeData('41', '051')
+    mult['name'] = 'multnomah'
+    la = cleanAgeData('06', '037')
+    la['name'] = 'losangeles'
+    bos = cleanAgeData('25', '025')
+    bos['name'] = 'suffolk'
+    dc = cleanAgeData('11', '001')
+    dc['name'] = 'dc'
 
-    nx.set_node_attributes(G, {0: 300, 1: 90, 2: 60}, 'dry')
-    nx.set_edge_attributes(G, {(1,2): 1500, (0, 1): 2300, (0, 2): 900}, 'distance')
+    cityAttributes = {0: la, 1: dc, 2: bos, 3: mult}
 
+    G = nx.complete_graph(4)
+
+    nx.set_node_attributes(G, cityAttributes)
+    # nx.set_edge_attributes(G, {(1,2): 1500, (0, 1): 2300, (0, 2): 900}, 'distance')
+    for n in G.nodes():
+        print(G.node[n]['name'], G.node[n]['fpct3'])
+    nx.draw(G)
+    plt.show()
     return G
+
+createGraph()

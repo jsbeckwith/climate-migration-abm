@@ -72,13 +72,13 @@ def agePercentage(age_data):
             age_data[i + 'pct' + str(j)] = getattr(age_data, accessBucketName) / getattr(age_data, totalBucket)
     return age_data
 
-def showData(age_data):
+def cleanData(age_data):
     age_data = age_data[['m_total', 'f_total', 'total_18+', 
                         'mbucket1', 'mbucket2', 'mbucket3', 'mbucket4', 
                         'fbucket1', 'fbucket2', 'fbucket3', 'fbucket4', 
                         'mpct1', 'mpct2', 'mpct3', 'mpct4', 
                         'fpct1', 'fpct2', 'fpct3', 'fpct4']]
-    print(age_data)
+    return age_data
 
 def cleanAgeData(state_fips, county_fips):
     shells = createAgeShells()
@@ -87,14 +87,9 @@ def cleanAgeData(state_fips, county_fips):
     ageData = ageBuckets(ageData, 'm')
     ageData = ageBuckets(ageData, 'f')
     ageData = agePercentage(ageData)
-    showData(ageData)
-    return ageData
-
-print('multnomah')
-mult = cleanAgeData('41', '051')
-print('los angeles')
-la = cleanAgeData('06', '037')
-print('suffolk')
-bos = cleanAgeData('25', '025')
-print('dc')
-dc = cleanAgeData('11', '001')
+    ageData = cleanData(ageData)
+    ageDataList = ageData.to_dict('list')
+    for key in ageDataList.keys():
+        ageDataList[key] = ageDataList[key][0]
+    print(ageDataList)
+    return ageDataList
