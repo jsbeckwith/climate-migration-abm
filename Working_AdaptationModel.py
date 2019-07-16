@@ -19,6 +19,7 @@ class AdaptationModel(Model):
         self.grid = NetworkGrid(self.G)
         self.agent_list = []  # list of all agents
         self.county_population_list = [0] * num_nodes
+        self.county_migration_rates = [0] * num_nodes
         global tick
         tick = init_time
 
@@ -30,24 +31,30 @@ class AdaptationModel(Model):
             # Add the agent to a random node
             self.grid.place_agent(a, random.choice(list_of_nodes))
             self.agent_list.append(a)
+        self.updateCountyPopulation()
 
         # Store model level attributes using a DataCollector object
         ### WHAT DATA WILL BE COLLECTED AT THE MODEL LEVEL ?? EVERYTHING IS WITHIN THE NODES....
         # provided you can access the node data it Should work .. ?
         # these are based on the attributes of the model.
         self.datacollector = DataCollector(
-            model_reporters={"Population": lambda m2: m2.num_agents, "County Population": lambda m1: m1.county_population_list}
+            model_reporters={"Population": lambda m2: m2.num_agents, "County Population": lambda m1: list(m1.county_population_list)} #deepcopy workaround
         )
 
     def updateCountyPopulation(self):
         for n in self.nodes:
             self.county_population_list[n] = len(self.G.node[n]['agent'])
 
+    def updateClimate(self):
+        pass
+        # use data to create a linear trend, update each node w/ different "step"
+
     def step(self):
         global tick
         ### WOULD NEED TO DO THIS FOR EVERY NODE - IS IT POSSIBLE
         self.schedule.step()  # update agents
         self.updateCountyPopulation()
+        self.updateClimate()
         self.datacollector.collect(self)  # collect model level attributes for current time step
         tick += 1
 
@@ -56,7 +63,11 @@ class Household(Agent):
     def __init__(self, unique_id, model):
         super().__init__(unique_id, model)
         self.unique_id = unique_id  # unique identification number
-        self.connections = []  # list of all agents to which ego is connected
+        self.age = 0
+        self.gender = 0
+        self.married = 0
+        self.income = 0
+        self.connections = []  # list of all connected agents
         self.adaptive_capacity = random.normalvariate(0, 1)  # ability to implement adaptation actions
         
 
@@ -83,10 +94,12 @@ class Household(Agent):
                 self.model.grid.move_agent(self, new_position)
 
 def createGraph():
-    G = nx.Graph()
-    G.add_edge(1, 2)
-    G.add_edge(0, 1)
-    G.add_edge(2, 0)
+    # create a perfectly connected graph of all counties (k^78)
+    # G_counties = nx.complete_graph(78)
+    # use pandas to manipulate county demographic data & climate data
+    # add attributes to nodes via dictionaries as in line (109)
+
+    G = nx.complete_graph(3)
     G.node[0]['name'] = 'los angeles'
     G.node[1]['name'] = 'anchorage'
     G.node[2]['name'] = 'portland'
