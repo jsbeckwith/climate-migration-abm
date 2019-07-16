@@ -93,3 +93,27 @@ def cleanAgeData(state_fips, county_fips):
         ageDataList[key] = ageDataList[key][0]
     print(ageDataList)
     return ageDataList
+
+"""
+mult = cleanAgeData('41', '051')
+mult['name'] = 'multnomah'
+la = cleanAgeData('06', '037')
+la['name'] = 'losangeles'
+bos = cleanAgeData('25', '025')
+bos['name'] = 'suffolk'
+dc = cleanAgeData('11', '001')
+dc['name'] = 'dc'
+
+cityAttributes = {0: la, 1: dc, 2: bos, 3: mult}
+
+cityAttributesdf = pd.DataFrame.from_dict(cityAttributes, orient='index')
+cityAttributesdf.to_csv("cityAttributes2.csv")
+climateData = pd.read_csv('countychangetest.csv')
+"""
+
+def mergeClimateDemographic():
+    climateData = pd.read_csv('countychangetest.csv')
+    demoData = pd.read_csv('cityAttributes2.csv')
+    mergeData = pd.merge(demoData, climateData, on='id')
+    mergeDataDict = mergeData.to_dict('index')
+    return(mergeDataDict)

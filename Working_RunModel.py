@@ -18,7 +18,5 @@ def slr_adaptation():
         #print(model.G.node[n]['dry'])
     return model_attributes
 
-    
-
 data = slr_adaptation()
 print(data)

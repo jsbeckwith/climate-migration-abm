@@ -101,25 +101,14 @@ def createGraph():
     # use pandas to manipulate county demographic data & climate data
     # add attributes to nodes via dictionaries as in line (109)
 
-    mult = cleanAgeData('41', '051')
-    mult['name'] = 'multnomah'
-    la = cleanAgeData('06', '037')
-    la['name'] = 'losangeles'
-    bos = cleanAgeData('25', '025')
-    bos['name'] = 'suffolk'
-    dc = cleanAgeData('11', '001')
-    dc['name'] = 'dc'
-
-    cityAttributes = {0: la, 1: dc, 2: bos, 3: mult}
-
+    nodeData = mergeClimateDemographic()
     G = nx.complete_graph(4)
 
-    nx.set_node_attributes(G, cityAttributes)
-    # nx.set_edge_attributes(G, {(1,2): 1500, (0, 1): 2300, (0, 2): 900}, 'distance')
+    nx.set_node_attributes(G, nodeData)
+    nx.set_edge_attributes(G, {(0, 1): 2294, (0, 2): 2591, (0, 3): 826, (1, 2): 394, (1, 3): 2347, (2, 3): 2532}, 'distance')
     for n in G.nodes():
-        print(G.node[n]['name'], G.node[n]['fpct3'])
-    nx.draw(G)
-    plt.show()
+        print(G.node[n]['name'], G.node[n]['fpct3'], G.node[n]['drain_dmonth'])
+
     return G
 
 createGraph()
