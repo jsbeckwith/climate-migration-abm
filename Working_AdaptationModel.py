@@ -10,6 +10,9 @@ import networkx as nx
 import matplotlib.pyplot as plt
 import numpy as np
 
+# ACCESS NODE OF AGENT BY USING .pos
+# ACCESS AGENTS IN NODE BY USING self.G.node[n]['agent']
+
 tick = 0  # counter for current time step
 
 class AdaptationModel(Model):
@@ -26,6 +29,12 @@ class AdaptationModel(Model):
         global tick
         tick = init_time
 
+        # Store model level attributes using a DataCollector object
+        self.datacollector = DataCollector(
+            model_reporters={"County Population": lambda m1: m1.county_population_list}
+        )
+
+    def addAgents(self):
         # Create Agents -- agents are placed randomly on the grid and added to the model schedule
         # to access node data: G.node[n][attr]
         list_of_nodes = list(self.G.nodes())
@@ -74,22 +83,23 @@ class AdaptationModel(Model):
         
         self.updateCountyPopulation()
 
-        # Store model level attributes using a DataCollector object
-        self.datacollector = DataCollector(
-            model_reporters={"Population": lambda m2: m2.num_agents, "County Population": lambda m1: m1.county_population_list}
-        )
+    def setNetworks(self):
+        for a in self.schedule.agents:
+            a.connections = random.sample(self.schedule.agents, 10)
+            print(a.connections) 
 
     def updateCountyPopulation(self):
         for n in self.nodes:
             self.county_population_list[n] = len(self.G.node[n]['agent'])
 
     def updateClimate(self):
-        pass
-        # use data to create a linear trend, update each node w/ different "step"
+        for n in self.nodes:
+            self.G.node[n]['heat2013'] += self.G.node[n]['dheat_dmonth']
+            self.G.node[n]['rain2013'] += self.G.node[n]['drain_dmonth']
+            self.G.node[n]['dry2013'] += self.G.node[n]['ddry_dmonth']
 
     def step(self):
         global tick
-        ### WOULD NEED TO DO THIS FOR EVERY NODE - IS IT POSSIBLE
         self.schedule.step()  # update agents
         self.updateCountyPopulation()
         self.updateClimate()
@@ -103,14 +113,35 @@ class Person(Agent):
         self.unique_id = unique_id  # unique identification number
         self.age = 0
         self.gender = 0
+        self.probability = 0
         # self.married = 0
         # self.income = 0
         self.connections = []  # list of all connected agents
+        self.connectedLocations = []
         self.adaptive_capacity = random.normalvariate(0, 1)  # ability to implement adaptation actions
         
+    def calculateMigrationProbability(self):
+        if self.age == 0:
+            self.probability += 0.042
+        if self.age == 1:
+            self.probability += 0.03
+        if self.age == 2:
+            self.probability += 0.013
+        if self.age == 3:
+            self.probability += 0.009
+        if self.gender == 0:
+            self.probability += 0
+        if self.gender == 1:
+            self.probability += 0.001
+    
+    def updateNetworkLocations(self):
+        self.connectedLocations = []
+        for i in range(10):
+            self.connectedLocations.append(self.connections[i].pos)
 
     def step(self):
-        self.calculate_adaptive_capacity()  # calculate new adaptative capacity
+        self.updateNetworkLocations()
+        self.calculateMigrationProbability()  # calculate new adaptative capacity
 
     def advance(self):
         self.make_decision()  # implement adaptation actions
@@ -125,7 +156,7 @@ class Person(Agent):
     # third resistance or accommodation actions reduce inundation by 0.5 m each. An agent cannot implement more than 2 m
     # of accommodation or resistance. Agents that retreat are removed from the grid.
     def make_decision(self):
-        if self.adaptive_capacity > 0.5:
+        if random.random() < self.probability:
             possible_steps = [node for node in self.model.grid.get_neighbors(self.pos, include_center=False)]
             if len(possible_steps) > 0:
                 new_position = self.random.choice(possible_steps)

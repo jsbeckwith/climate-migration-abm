@@ -10,13 +10,14 @@ def slr_adaptation():
 
     # initialize model
     model = AdaptationModel(init_population, num_counties, 0)
+    model.addAgents()
+    model.setNetworks()
     model.datacollector.collect(model)  # collect initial model state variables
-
     model_attributes = model.datacollector.get_model_vars_dataframe()  # store model level state variables in dataframe
+    print(model_attributes)
 
     for i in range(steps):
         model.step()
-        print(model_attributes)
     
     return model_attributes
 
