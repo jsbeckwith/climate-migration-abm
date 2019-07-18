@@ -27,20 +27,23 @@ class ClimateMigrationModel(Model):
         self.agent_list = []  # list of all agents - necessary ??
         self.county_population_list = [0] * self.num_nodes
         self.county_migration_rates = [0] * self.num_nodes
+        self.cum_county_migration_rates = [0] * self.num_nodes
+        self.deaths = [0] * self.num_nodes
+        self.births = [0] * self.num_nodes
         self.climateData = {0: {}, 1: {}, 2: {}, 3: {}}
         global tick
         tick = init_time
 
         # Store model level attributes using a DataCollector object
         self.datacollector = DataCollector(
-            model_reporters={"County Population": lambda m1: m1.county_population_list}
+            model_reporters={"County Population": lambda m1: list(m1.county_population_list), "County Migration Rates": lambda m2: m2.county_migration_rates,
+            "Deaths": lambda m3: m3.deaths, "Births": lambda m4: m4.births}
         )
 
     def addAgents(self):
         # Create Agents -- agents are placed randomly on the grid and added to the model schedule
         # to access node data: G.node[n][attr]
-        list_of_nodes = list(self.G.nodes())
-        
+        countyList = list(self.nodes)
         """
         populationList = [0]*self.num_nodes
         for j in range(self.num_nodes):
@@ -59,7 +62,8 @@ class ClimateMigrationModel(Model):
             cumAgeF = np.cumsum(ageListF)
 
             a = Person(i, self)
-            self.grid.place_agent(a, list_of_nodes[m])
+            self.grid.place_agent(a, countyList[m])
+            a.originalPos = a.pos
             
             if random.random() < 0.5:
                 a.gender = 1 # male
@@ -99,16 +103,22 @@ class ClimateMigrationModel(Model):
             a.connections += random.sample(self.schedule.agents, random.randint(1, 5))
 
     def updateCountyPopulation(self):
+        self.deaths = [0]*self.num_nodes
+        self.births = [0]*self.num_nodes
         for a in self.schedule.agents:
-            if a.age > 4.13: # make a lil less uniform ?
+            deathVariable = random.random()
+            if a.age > 4 + deathVariable: # make a lil less uniform ? - also don't have ppl dying right away...
+                self.deaths[a.pos] += 1
                 self.grid._remove_agent(a, a.pos)
                 self.schedule.remove(a)
         for m in self.county_population_list:
-            toAdd = m//10
+            toAdd = m//30 # birth rate
             for i in range(toAdd):
                 self.num_agents += 1
                 a = Person(self.num_agents, self)
                 self.grid.place_agent(a, self.county_population_list.index(m))
+                a.originalPos = a.pos
+                self.births[a.pos] += 1
                 a.connections = random.sample(self.G.node[a.pos]['agent'], 4)
                 a.connections += random.sample(self.schedule.agents, random.randint(1, 5))
                 self.schedule.add(a)                
@@ -130,20 +140,31 @@ class ClimateMigrationModel(Model):
             self.climateData[n]['rain'] = self.G.node[n]['rain2013']
             self.climateData[n]['dry'] = self.G.node[n]['dry2013']
 
+    def calculateMigrationRates(self):
+        self.county_migration_rates = [0]*self.num_nodes
+        for n in self.nodes:
+            for a in self.G.node[n]['agent']:
+                if a.originalPos != n:
+                    self.cum_county_migration_rates[n] += 1
+                    self.county_migration_rates[n] += 1
+                    # could eventually factor in edges to get a better picture of Where ?
+    
     def step(self):
         global tick
-        self.schedule.step()  # update agents
+        self.schedule.step() 
         self.updateCountyPopulation()
         self.updateClimate()
         self.calculateCurrentClimate()
-        self.datacollector.collect(self)  # collect model level attributes for current time step
+        self.calculateMigrationRates()
+        self.datacollector.collect(self)  
         tick += 1
 
 
 class Person(Agent):
     def __init__(self, unique_id, model):
         super().__init__(unique_id, model)
-        self.unique_id = unique_id  # unique identification number
+        self.unique_id = unique_id  
+        self.originalPos = None
         self.age = 0
         self.gender = 0
         self.probability = 0
@@ -208,13 +229,14 @@ class Person(Agent):
         currentHeat = self.model.climateData[self.pos]['heat']
         if currentHeat > 30:
             if random.random() < self.probability:
-                self.rankCountiesByNetwork()
-                maxNetworkCounty = self.rankedCounties.index(max(self.rankedCounties))
-                for i in range(4):
-                    if currentHeat <= self.model.climateData[i]['heat']:
-                        self.rankedCounties.pop(i)
-                maxNetworkCounty = self.rankedCounties.index(max(self.rankedCounties)) # MAX WILL RETURN FIRST VALUE IF A TIE
-                self.model.grid.move_agent(self, maxNetworkCounty)
+                self.calculate_adaptive_capacity()
+                if self.adaptive_capacity > 0.5:
+                    self.rankCountiesByNetwork()
+                    for i in range(len(self.rankedCounties)):
+                        if currentHeat <= self.model.climateData[i]['heat']:
+                            self.rankedCounties[i] = -1
+                    maxNetworkCounty = self.rankedCounties.index(max(self.rankedCounties)) # MAX WILL RETURN FIRST VALUE IF A TIE
+                    self.model.grid.move_agent(self, maxNetworkCounty)
 
 def createGraph():
     # create a perfectly connected graph of all counties (k^78)
