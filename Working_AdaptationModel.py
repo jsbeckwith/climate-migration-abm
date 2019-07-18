@@ -15,17 +15,19 @@ import numpy as np
 
 tick = 0  # counter for current time step
 
-class AdaptationModel(Model):
+class ClimateMigrationModel(Model):
     def __init__(self, num_agents, num_nodes, init_time=0):
         super().__init__()
         self.num_agents = num_agents  # number of agents in simulation area
         self.schedule = SimultaneousActivation(self)  # agents are updated in a random order at each time step
         self.G = createGraph()  # agents are located on a network
+        self.num_nodes = num_nodes
         self.nodes = self.G.nodes()
         self.grid = NetworkGrid(self.G)
         self.agent_list = []  # list of all agents - necessary ??
-        self.county_population_list = [0] * num_nodes
-        self.county_migration_rates = [0] * num_nodes
+        self.county_population_list = [0] * self.num_nodes
+        self.county_migration_rates = [0] * self.num_nodes
+        self.climateData = {0: {}, 1: {}, 2: {}, 3: {}}
         global tick
         tick = init_time
 
@@ -38,7 +40,14 @@ class AdaptationModel(Model):
         # Create Agents -- agents are placed randomly on the grid and added to the model schedule
         # to access node data: G.node[n][attr]
         list_of_nodes = list(self.G.nodes())
-        populationList = [40, 120, 150, 180]
+        
+        """
+        populationList = [0]*self.num_nodes
+        for j in range(self.num_nodes):
+            populationList[j] = self.G.node[j]['total_18+'] 
+        """
+        populationList = [750, 50, 60, 60]
+        populationList = np.cumsum(populationList)
         
         m = 0
         i = 0
@@ -85,8 +94,8 @@ class AdaptationModel(Model):
 
     def setNetworks(self):
         for a in self.schedule.agents:
-            a.connections = random.sample(self.schedule.agents, 10)
-            print(a.connections) 
+            a.connections = random.sample(self.G.node[a.pos]['agent'], 3)
+            a.connections += random.sample(self.schedule.agents, 4)
 
     def updateCountyPopulation(self):
         for n in self.nodes:
@@ -94,15 +103,22 @@ class AdaptationModel(Model):
 
     def updateClimate(self):
         for n in self.nodes:
-            self.G.node[n]['heat2013'] += self.G.node[n]['dheat_dmonth']
-            self.G.node[n]['rain2013'] += self.G.node[n]['drain_dmonth']
-            self.G.node[n]['dry2013'] += self.G.node[n]['ddry_dmonth']
+            self.G.node[n]['heat2013'] += self.G.node[n]['dheat_dyear']
+            self.G.node[n]['rain2013'] += self.G.node[n]['drain_dyear']
+            self.G.node[n]['dry2013'] += self.G.node[n]['ddry_dyear']
+
+    def calculateCurrentClimate(self):
+        for n in self.nodes:
+            self.climateData[n]['heat'] = self.G.node[n]['heat2013']
+            self.climateData[n]['rain'] = self.G.node[n]['rain2013']
+            self.climateData[n]['dry'] = self.G.node[n]['dry2013']
 
     def step(self):
         global tick
         self.schedule.step()  # update agents
         self.updateCountyPopulation()
         self.updateClimate()
+        self.calculateCurrentClimate()
         self.datacollector.collect(self)  # collect model level attributes for current time step
         tick += 1
 
@@ -118,8 +134,27 @@ class Person(Agent):
         # self.income = 0
         self.connections = []  # list of all connected agents
         self.connectedLocations = []
+        self.rankedCounties = []
         self.adaptive_capacity = random.normalvariate(0, 1)  # ability to implement adaptation actions
-        
+    
+    def step(self):
+        self.updateNetworkLocations()
+        self.calculateMigrationProbability()  # calculate new adaptative capacity
+
+    def advance(self):
+        self.make_decision()  # implement adaptation actions
+
+    def updateNetworkLocations(self):
+        self.connectedLocations = []
+        for i in range(7):
+            self.connectedLocations.append(self.connections[i].pos)
+    
+    def rankCountiesByNetwork(self):
+        countyList = [0]*self.model.num_nodes
+        for n in self.connectedLocations:
+            countyList[n] += 1
+        self.rankedCounties = countyList # use index to get county/node id of max
+
     def calculateMigrationProbability(self):
         if self.age == 0:
             self.probability += 0.042
@@ -133,34 +168,21 @@ class Person(Agent):
             self.probability += 0
         if self.gender == 1:
             self.probability += 0.001
-    
-    def updateNetworkLocations(self):
-        self.connectedLocations = []
-        for i in range(10):
-            self.connectedLocations.append(self.connections[i].pos)
 
-    def step(self):
-        self.updateNetworkLocations()
-        self.calculateMigrationProbability()  # calculate new adaptative capacity
-
-    def advance(self):
-        self.make_decision()  # implement adaptation actions
-
-    # Adaptive capacity changes randomly each year
     def calculate_adaptive_capacity(self):
         self.adaptive_capacity = random.random()
 
-    # The probability that an agent implements an action depends on flood damage and relative elevation
-    # The relative probabilities of each possible type of action depend on community level adaptions and attachment
-    # to place. The first resistance or accommodation action effectively reduces inundation by 1 m. The second and
-    # third resistance or accommodation actions reduce inundation by 0.5 m each. An agent cannot implement more than 2 m
-    # of accommodation or resistance. Agents that retreat are removed from the grid.
     def make_decision(self):
-        if random.random() < self.probability:
-            possible_steps = [node for node in self.model.grid.get_neighbors(self.pos, include_center=False)]
-            if len(possible_steps) > 0:
-                new_position = self.random.choice(possible_steps)
-                self.model.grid.move_agent(self, new_position)
+        currentHeat = self.model.climateData[self.pos]['heat']
+        if currentHeat > 30:
+            if random.random() < self.probability:
+                self.rankCountiesByNetwork()
+                maxNetworkCounty = self.rankedCounties.index(max(self.rankedCounties))
+                for i in range(4):
+                    if currentHeat <= self.model.climateData[i]['heat']:
+                        self.rankedCounties.pop(i)
+                maxNetworkCounty = self.rankedCounties.index(max(self.rankedCounties)) # MAX WILL RETURN FIRST VALUE IF A TIE
+                self.model.grid.move_agent(self, maxNetworkCounty)
 
 def createGraph():
     # create a perfectly connected graph of all counties (k^78)

@@ -3,15 +3,20 @@ import sys
 import numpy as np
 
 init_population = 180  # initial population in simulation area
-steps = 10  # number of time steps to run model
+steps = 20  # number of time steps to run model
 num_counties = 4
 
-def slr_adaptation():
+def runClimateMigrationModel():
 
     # initialize model
-    model = AdaptationModel(init_population, num_counties, 0)
+    model = ClimateMigrationModel(init_population, num_counties, 0)
+    print('created model obj')
     model.addAgents()
+    print('added agents')
     model.setNetworks()
+    print('set networks')
+    model.calculateCurrentClimate()
+    print('initial climate data')
     model.datacollector.collect(model)  # collect initial model state variables
     model_attributes = model.datacollector.get_model_vars_dataframe()  # store model level state variables in dataframe
     print(model_attributes)
@@ -21,5 +26,5 @@ def slr_adaptation():
     
     return model_attributes
 
-data = slr_adaptation()
+data = runClimateMigrationModel()
 print(data)
