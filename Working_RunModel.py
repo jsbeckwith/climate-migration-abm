@@ -20,11 +20,7 @@ def runClimateMigrationModel():
     model.datacollector.collect(model)  # collect initial model state variables
 
     for i in range(steps):
-        print(i)
         model.step()
-        print(model.county_population_list)
-        print(model.county_migration_rates)
-        print(model.cum_county_migration_rates)
     
     model_attributes = model.datacollector.get_model_vars_dataframe()  # store model level state variables in dataframe
     return model_attributes

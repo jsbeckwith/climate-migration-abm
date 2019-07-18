@@ -11,7 +11,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 # ACCESS NODE OF AGENT BY USING .pos
-# ACCESS AGENTS IN NODE BY USING self.G.node[n]['agent']
+# ACCESS AGENTS IN NODE BY USING G.node[n]['agent']
+# ACCESS NODE DATA USING G.node[n]['attr']
 
 tick = 0  # counter for current time step
 
@@ -24,7 +25,6 @@ class ClimateMigrationModel(Model):
         self.num_nodes = num_nodes
         self.nodes = self.G.nodes()
         self.grid = NetworkGrid(self.G)
-        self.agent_list = []  # list of all agents - necessary ??
         self.county_population_list = [0] * self.num_nodes
         self.county_migration_rates = [0] * self.num_nodes
         self.cum_county_migration_rates = [0] * self.num_nodes
@@ -37,22 +37,21 @@ class ClimateMigrationModel(Model):
         # Store model level attributes using a DataCollector object
         self.datacollector = DataCollector(
             model_reporters={"County Population": lambda m1: list(m1.county_population_list), "County Migration Rates": lambda m2: m2.county_migration_rates,
-            "Deaths": lambda m3: m3.deaths, "Births": lambda m4: m4.births}
+            "Deaths": lambda m3: m3.deaths, "Births": lambda m4: m4.births, "Total Population": lambda m5: m5.num_agents}
         )
 
     def addAgents(self):
-        # Create Agents -- agents are placed randomly on the grid and added to the model schedule
-        # to access node data: G.node[n][attr]
         countyList = list(self.nodes)
-        """
+        
         populationList = [0]*self.num_nodes
         for j in range(self.num_nodes):
             populationList[j] = self.G.node[j]['total_18+'] 
-        """
-        populationList = [750, 50, 60, 60]
-        populationList = np.cumsum(populationList)
-        self.num_agents = populationList[3]
         
+        # populationList = [750, 50, 60, 60]
+        self.county_population_list = populationList
+        populationList = list(np.cumsum(populationList))
+        self.num_agents = populationList[3]
+
         m = 0
         i = 0
         while i < populationList[m]:
@@ -92,10 +91,7 @@ class ClimateMigrationModel(Model):
             if i == populationList[m]:
                 if m < len(populationList) - 1:
                     m += 1
-            self.agent_list.append(a)
             self.schedule.add(a)
-        
-        self.updateCountyPopulation()
 
     def setNetworks(self):
         for a in self.schedule.agents:
@@ -119,6 +115,7 @@ class ClimateMigrationModel(Model):
                 self.grid.place_agent(a, self.county_population_list.index(m))
                 a.originalPos = a.pos
                 self.births[a.pos] += 1
+                print(len(self.G.node[a.pos]['agent']))
                 a.connections = random.sample(self.G.node[a.pos]['agent'], 4)
                 a.connections += random.sample(self.schedule.agents, random.randint(1, 5))
                 self.schedule.add(a)                
