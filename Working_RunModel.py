@@ -9,7 +9,7 @@ num_counties = 4
 def runClimateMigrationModel():
 
     # initialize model
-    model = ClimateMigrationModel(init_population, num_counties, 0)
+    model = ClimateMigrationModel(num_counties, 0)
     print('created model obj')
     model.addAgents()
     print('added agents')
