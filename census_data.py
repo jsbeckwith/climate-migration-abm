@@ -32,7 +32,7 @@ def createShells(tableCode, startShell, endShell):
         shellList.append(shell)
     return shellList
 
-shells = createShells('B25118', 1, 25)
+shells = createShells('B11005', 1, 19)
 mult = censusdata.download('acs5', 2013, censusdata.censusgeo([('state', '41'), ('county', '051')]), shells)
 la = censusdata.download('acs5', 2013, censusdata.censusgeo([('state', '06'), ('county', '037')]), shells)
 bos = censusdata.download('acs5', 2013, censusdata.censusgeo([('state', '25'), ('county', '025')]), shells)
@@ -40,4 +40,4 @@ dc = censusdata.download('acs5', 2013, censusdata.censusgeo([('state', '11'), ('
 testData = la.append(dc)
 testData = testData.append(bos)
 testData = testData.append(mult)
-testData.to_csv('tenurebyhousehold.csv')
+testData.to_csv('raw_household65a.csv')

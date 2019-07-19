@@ -43,11 +43,12 @@ class ClimateMigrationModel(Model):
     def addAgents(self):
         countyList = list(self.nodes)
         
+        """
         populationList = [0]*self.num_nodes
         for j in range(self.num_nodes):
             populationList[j] = self.G.node[j]['total_18+'] 
-        
-        # populationList = [750, 50, 60, 60]
+        """
+        populationList = [750, 50, 60, 60]
         self.county_population_list = populationList
         populationList = list(np.cumsum(populationList))
         self.num_agents = populationList[3]
