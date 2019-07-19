@@ -3,6 +3,15 @@ import censusdata
 
 pd.set_option('display.expand_frame_repr', False)
 
+## B19037 - AGE OF HOUSEHOLDER BY HOUSEHOLD INCOME (!)
+## B11012 - HOUSEHOLD TYPE BY TENURE _or_
+## B11001 - HOUSEHOLD TYPE (INCL. LIVING ALONE)
+## C11005 - HOUSEHOLDS BY PRESENCE OF PEOPLE UNDER 18 YEARS
+## B11007 - HOUSEHOLDS BY PRESENCE OF PEOPLE OVER 65 YEARS
+## this will give - age, children, elders, married, alone, income. don't need gender.
+
+## can use below code as a framework for implementing household conversion
+
 def createAgeShells():
     age_shells = []
     for i in range(1 ,50):
