@@ -1,0 +1,187 @@
+Variable     | Table                          | Label                                                    | Type
+-------------------------------------------------------------------------------------------------------------------
+B19037_001E  | B19037.  Age of Householder by | Total:                                                   | int
+B19037_002E  | B19037.  Age of Householder by | Householder under 25 years:                              | int
+B19037_003E  | B19037.  Age of Householder by | !! Householder under 25 years: Less than $10,000         | int
+B19037_004E  | B19037.  Age of Householder by | !! Householder under 25 years: $10,000 to $14,999        | int
+B19037_005E  | B19037.  Age of Householder by | !! Householder under 25 years: $15,000 to $19,999        | int
+B19037_006E  | B19037.  Age of Householder by | !! Householder under 25 years: $20,000 to $24,999        | int
+B19037_007E  | B19037.  Age of Householder by | !! Householder under 25 years: $25,000 to $29,999        | int
+B19037_008E  | B19037.  Age of Householder by | !! Householder under 25 years: $30,000 to $34,999        | int
+B19037_009E  | B19037.  Age of Householder by | !! Householder under 25 years: $35,000 to $39,999        | int
+B19037_010E  | B19037.  Age of Householder by | !! Householder under 25 years: $40,000 to $44,999        | int
+B19037_011E  | B19037.  Age of Householder by | !! Householder under 25 years: $45,000 to $49,999        | int
+B19037_012E  | B19037.  Age of Householder by | !! Householder under 25 years: $50,000 to $59,999        | int
+B19037_013E  | B19037.  Age of Householder by | !! Householder under 25 years: $60,000 to $74,999        | int
+B19037_014E  | B19037.  Age of Householder by | !! Householder under 25 years: $75,000 to $99,999        | int
+B19037_015E  | B19037.  Age of Householder by | !! Householder under 25 years: $100,000 to $124,999      | int
+B19037_016E  | B19037.  Age of Householder by | !! Householder under 25 years: $125,000 to $149,999      | int
+B19037_017E  | B19037.  Age of Householder by | !! Householder under 25 years: $150,000 to $199,999      | int
+B19037_018E  | B19037.  Age of Householder by | !! Householder under 25 years: $200,000 or more          | int
+B19037_019E  | B19037.  Age of Householder by | Householder 25 to 44 years:                              | int
+B19037_020E  | B19037.  Age of Householder by | !! Householder 25 to 44 years: Less than $10,000         | int
+B19037_021E  | B19037.  Age of Householder by | !! Householder 25 to 44 years: $10,000 to $14,999        | int
+B19037_022E  | B19037.  Age of Householder by | !! Householder 25 to 44 years: $15,000 to $19,999        | int
+B19037_023E  | B19037.  Age of Householder by | !! Householder 25 to 44 years: $20,000 to $24,999        | int
+B19037_024E  | B19037.  Age of Householder by | !! Householder 25 to 44 years: $25,000 to $29,999        | int
+B19037_025E  | B19037.  Age of Householder by | !! Householder 25 to 44 years: $30,000 to $34,999        | int
+B19037_026E  | B19037.  Age of Householder by | !! Householder 25 to 44 years: $35,000 to $39,999        | int
+B19037_027E  | B19037.  Age of Householder by | !! Householder 25 to 44 years: $40,000 to $44,999        | int
+B19037_028E  | B19037.  Age of Householder by | !! Householder 25 to 44 years: $45,000 to $49,999        | int
+B19037_029E  | B19037.  Age of Householder by | !! Householder 25 to 44 years: $50,000 to $59,999        | int
+B19037_030E  | B19037.  Age of Householder by | !! Householder 25 to 44 years: $60,000 to $74,999        | int
+B19037_031E  | B19037.  Age of Householder by | !! Householder 25 to 44 years: $75,000 to $99,999        | int
+B19037_032E  | B19037.  Age of Householder by | !! Householder 25 to 44 years: $100,000 to $124,999      | int
+B19037_033E  | B19037.  Age of Householder by | !! Householder 25 to 44 years: $125,000 to $149,999      | int
+B19037_034E  | B19037.  Age of Householder by | !! Householder 25 to 44 years: $150,000 to $199,999      | int
+B19037_035E  | B19037.  Age of Householder by | !! Householder 25 to 44 years: $200,000 or more          | int
+B19037_036E  | B19037.  Age of Householder by | Householder 45 to 64 years:                              | int
+B19037_037E  | B19037.  Age of Householder by | !! Householder 45 to 64 years: Less than $10,000         | int
+B19037_038E  | B19037.  Age of Householder by | !! Householder 45 to 64 years: $10,000 to $14,999        | int
+B19037_039E  | B19037.  Age of Householder by | !! Householder 45 to 64 years: $15,000 to $19,999        | int
+B19037_040E  | B19037.  Age of Householder by | !! Householder 45 to 64 years: $20,000 to $24,999        | int
+B19037_041E  | B19037.  Age of Householder by | !! Householder 45 to 64 years: $25,000 to $29,999        | int
+B19037_042E  | B19037.  Age of Householder by | !! Householder 45 to 64 years: $30,000 to $34,999        | int
+B19037_043E  | B19037.  Age of Householder by | !! Householder 45 to 64 years: $35,000 to $39,999        | int
+B19037_044E  | B19037.  Age of Householder by | !! Householder 45 to 64 years: $40,000 to $44,999        | int
+B19037_045E  | B19037.  Age of Householder by | !! Householder 45 to 64 years: $45,000 to $49,999        | int
+B19037_046E  | B19037.  Age of Householder by | !! Householder 45 to 64 years: $50,000 to $59,999        | int
+B19037_047E  | B19037.  Age of Householder by | !! Householder 45 to 64 years: $60,000 to $74,999        | int
+B19037_048E  | B19037.  Age of Householder by | !! Householder 45 to 64 years: $75,000 to $99,999        | int
+B19037_049E  | B19037.  Age of Householder by | !! Householder 45 to 64 years: $100,000 to $124,999      | int
+B19037_050E  | B19037.  Age of Householder by | !! Householder 45 to 64 years: $125,000 to $149,999      | int
+B19037_051E  | B19037.  Age of Householder by | !! Householder 45 to 64 years: $150,000 to $199,999      | int
+B19037_052E  | B19037.  Age of Householder by | !! Householder 45 to 64 years: $200,000 or more          | int
+B19037_053E  | B19037.  Age of Householder by | Householder 65 years and over:                           | int
+B19037_054E  | B19037.  Age of Householder by | !! Householder 65 years and over: Less than $10,000      | int
+B19037_055E  | B19037.  Age of Householder by | !! Householder 65 years and over: $10,000 to $14,999     | int
+B19037_056E  | B19037.  Age of Householder by | !! Householder 65 years and over: $15,000 to $19,999     | int
+B19037_057E  | B19037.  Age of Householder by | !! Householder 65 years and over: $20,000 to $24,999     | int
+B19037_058E  | B19037.  Age of Householder by | !! Householder 65 years and over: $25,000 to $29,999     | int
+B19037_059E  | B19037.  Age of Householder by | !! Householder 65 years and over: $30,000 to $34,999     | int
+B19037_060E  | B19037.  Age of Householder by | !! Householder 65 years and over: $35,000 to $39,999     | int
+B19037_061E  | B19037.  Age of Householder by | !! Householder 65 years and over: $40,000 to $44,999     | int
+B19037_062E  | B19037.  Age of Householder by | !! Householder 65 years and over: $45,000 to $49,999     | int
+B19037_063E  | B19037.  Age of Householder by | !! Householder 65 years and over: $50,000 to $59,999     | int
+B19037_064E  | B19037.  Age of Householder by | !! Householder 65 years and over: $60,000 to $74,999     | int
+B19037_065E  | B19037.  Age of Householder by | !! Householder 65 years and over: $75,000 to $99,999     | int
+B19037_066E  | B19037.  Age of Householder by | !! Householder 65 years and over: $100,000 to $124,999   | int
+B19037_067E  | B19037.  Age of Householder by | !! Householder 65 years and over: $125,000 to $149,999   | int
+B19037_068E  | B19037.  Age of Householder by | !! Householder 65 years and over: $150,000 to $199,999   | int
+B19037_069E  | B19037.  Age of Householder by | !! Householder 65 years and over: $200,000 or more       | int
+-------------------------------------------------------------------------------------------------------------------
+Variable     | Table                          | Label                                                    | Type
+-------------------------------------------------------------------------------------------------------------------
+B11005_001E  | B11005.  Households by Presenc | Total:                                                   | int
+B11005_002E  | B11005.  Households by Presenc | Households with one or more people under 18 years:       | int
+B11005_003E  | B11005.  Households by Presenc | !! Households with one or more people under 18 years: Fa | int
+B11005_004E  | B11005.  Households by Presenc | !! !! Households with one or more people under 18 years: | int
+B11005_005E  | B11005.  Households by Presenc | !! !! Households with one or more people under 18 years: | int
+B11005_006E  | B11005.  Households by Presenc | !! !! !! Households with one or more people under 18 yea | int
+B11005_007E  | B11005.  Households by Presenc | !! !! !! Households with one or more people under 18 yea | int
+B11005_008E  | B11005.  Households by Presenc | !! Households with one or more people under 18 years: No | int
+B11005_009E  | B11005.  Households by Presenc | !! !! Households with one or more people under 18 years: | int
+B11005_010E  | B11005.  Households by Presenc | !! !! Households with one or more people under 18 years: | int
+B11005_011E  | B11005.  Households by Presenc | Households with no people under 18 years:                | int
+B11005_012E  | B11005.  Households by Presenc | !! Households with no people under 18 years: Family hous | int
+B11005_013E  | B11005.  Households by Presenc | !! !! Households with no people under 18 years: Family h | int
+B11005_014E  | B11005.  Households by Presenc | !! !! Households with no people under 18 years: Family h | int
+B11005_015E  | B11005.  Households by Presenc | !! !! !! Households with no people under 18 years: Famil | int
+B11005_016E  | B11005.  Households by Presenc | !! !! !! Households with no people under 18 years: Famil | int
+B11005_017E  | B11005.  Households by Presenc | !! Households with no people under 18 years: Nonfamily h | int
+B11005_018E  | B11005.  Households by Presenc | !! !! Households with no people under 18 years: Nonfamil | int
+B11005_019E  | B11005.  Households by Presenc | !! !! Households with no people under 18 years: Nonfamil | int
+-------------------------------------------------------------------------------------------------------------------
+Variable     | Table                          | Label                                                    | Type
+-------------------------------------------------------------------------------------------------------------------
+B11007_001E  | B11007.  Households by Presenc | Total:                                                   | int
+B11007_002E  | B11007.  Households by Presenc | Households with one or more people 65 years and over:    | int
+B11007_003E  | B11007.  Households by Presenc | !! Households with one or more people 65 years and over: | int
+B11007_004E  | B11007.  Households by Presenc | !! Households with one or more people 65 years and over: | int
+B11007_005E  | B11007.  Households by Presenc | !! !! Households with one or more people 65 years and ov | int
+B11007_006E  | B11007.  Households by Presenc | !! !! Households with one or more people 65 years and ov | int
+B11007_007E  | B11007.  Households by Presenc | Households with no people 65 years and over:             | int
+B11007_008E  | B11007.  Households by Presenc | !! Households with no people 65 years and over: 1-person | int
+B11007_009E  | B11007.  Households by Presenc | !! Households with no people 65 years and over: 2-or-mor | int
+B11007_010E  | B11007.  Households by Presenc | !! !! Households with no people 65 years and over: 2-or- | int
+B11007_011E  | B11007.  Households by Presenc | !! !! Households with no people 65 years and over: 2-or- | int
+-------------------------------------------------------------------------------------------------------------------
+Variable     | Table                          | Label                                                    | Type
+-------------------------------------------------------------------------------------------------------------------
+B25011_001E  | B25011.  TENURE BY HOUSEHOLD T | Total:                                                   | int
+B25011_002E  | B25011.  TENURE BY HOUSEHOLD T | Owner occupied:                                          | int
+B25011_003E  | B25011.  TENURE BY HOUSEHOLD T | !! Owner occupied: Family households:                    | int
+B25011_004E  | B25011.  TENURE BY HOUSEHOLD T | !! !! Owner occupied: Family households: Married-couple  | int
+B25011_005E  | B25011.  TENURE BY HOUSEHOLD T | !! !! !! Owner occupied: Family households: Married-coup | int
+B25011_006E  | B25011.  TENURE BY HOUSEHOLD T | !! !! !! Owner occupied: Family households: Married-coup | int
+B25011_007E  | B25011.  TENURE BY HOUSEHOLD T | !! !! !! Owner occupied: Family households: Married-coup | int
+B25011_008E  | B25011.  TENURE BY HOUSEHOLD T | !! !! Owner occupied: Family households: Other family:   | int
+B25011_009E  | B25011.  TENURE BY HOUSEHOLD T | !! !! !! Owner occupied: Family households: Other family | int
+B25011_010E  | B25011.  TENURE BY HOUSEHOLD T | !! !! !! !! Owner occupied: Family households: Other fam | int
+B25011_011E  | B25011.  TENURE BY HOUSEHOLD T | !! !! !! !! Owner occupied: Family households: Other fam | int
+B25011_012E  | B25011.  TENURE BY HOUSEHOLD T | !! !! !! !! Owner occupied: Family households: Other fam | int
+B25011_013E  | B25011.  TENURE BY HOUSEHOLD T | !! !! !! Owner occupied: Family households: Other family | int
+B25011_014E  | B25011.  TENURE BY HOUSEHOLD T | !! !! !! !! Owner occupied: Family households: Other fam | int
+B25011_015E  | B25011.  TENURE BY HOUSEHOLD T | !! !! !! !! Owner occupied: Family households: Other fam | int
+B25011_016E  | B25011.  TENURE BY HOUSEHOLD T | !! !! !! !! Owner occupied: Family households: Other fam | int
+B25011_017E  | B25011.  TENURE BY HOUSEHOLD T | !! Owner occupied: Nonfamily households:                 | int
+B25011_018E  | B25011.  TENURE BY HOUSEHOLD T | !! !! Owner occupied: Nonfamily households: Householder  | int
+B25011_019E  | B25011.  TENURE BY HOUSEHOLD T | !! !! !! Owner occupied: Nonfamily households: Household | int
+B25011_020E  | B25011.  TENURE BY HOUSEHOLD T | !! !! !! Owner occupied: Nonfamily households: Household | int
+B25011_021E  | B25011.  TENURE BY HOUSEHOLD T | !! !! !! Owner occupied: Nonfamily households: Household | int
+B25011_022E  | B25011.  TENURE BY HOUSEHOLD T | !! !! Owner occupied: Nonfamily households: Householder  | int
+B25011_023E  | B25011.  TENURE BY HOUSEHOLD T | !! !! !! Owner occupied: Nonfamily households: Household | int
+B25011_024E  | B25011.  TENURE BY HOUSEHOLD T | !! !! !! Owner occupied: Nonfamily households: Household | int
+B25011_025E  | B25011.  TENURE BY HOUSEHOLD T | !! !! !! Owner occupied: Nonfamily households: Household | int
+B25011_026E  | B25011.  TENURE BY HOUSEHOLD T | Renter occupied:                                         | int
+B25011_027E  | B25011.  TENURE BY HOUSEHOLD T | !! Renter occupied: Family households:                   | int
+B25011_028E  | B25011.  TENURE BY HOUSEHOLD T | !! !! Renter occupied: Family households: Married-couple | int
+B25011_029E  | B25011.  TENURE BY HOUSEHOLD T | !! !! !! Renter occupied: Family households: Married-cou | int
+B25011_030E  | B25011.  TENURE BY HOUSEHOLD T | !! !! !! Renter occupied: Family households: Married-cou | int
+B25011_031E  | B25011.  TENURE BY HOUSEHOLD T | !! !! !! Renter occupied: Family households: Married-cou | int
+B25011_032E  | B25011.  TENURE BY HOUSEHOLD T | !! !! Renter occupied: Family households: Other family:  | int
+B25011_033E  | B25011.  TENURE BY HOUSEHOLD T | !! !! !! Renter occupied: Family households: Other famil | int
+B25011_034E  | B25011.  TENURE BY HOUSEHOLD T | !! !! !! !! Renter occupied: Family households: Other fa | int
+B25011_035E  | B25011.  TENURE BY HOUSEHOLD T | !! !! !! !! Renter occupied: Family households: Other fa | int
+B25011_036E  | B25011.  TENURE BY HOUSEHOLD T | !! !! !! !! Renter occupied: Family households: Other fa | int
+B25011_037E  | B25011.  TENURE BY HOUSEHOLD T | !! !! !! Renter occupied: Family households: Other famil | int
+B25011_038E  | B25011.  TENURE BY HOUSEHOLD T | !! !! !! !! Renter occupied: Family households: Other fa | int
+B25011_039E  | B25011.  TENURE BY HOUSEHOLD T | !! !! !! !! Renter occupied: Family households: Other fa | int
+B25011_040E  | B25011.  TENURE BY HOUSEHOLD T | !! !! !! !! Renter occupied: Family households: Other fa | int
+B25011_041E  | B25011.  TENURE BY HOUSEHOLD T | !! Renter occupied: Nonfamily households:                | int
+B25011_042E  | B25011.  TENURE BY HOUSEHOLD T | !! !! Renter occupied: Nonfamily households: Householder | int
+B25011_043E  | B25011.  TENURE BY HOUSEHOLD T | !! !! !! Renter occupied: Nonfamily households: Househol | int
+B25011_044E  | B25011.  TENURE BY HOUSEHOLD T | !! !! !! Renter occupied: Nonfamily households: Househol | int
+B25011_045E  | B25011.  TENURE BY HOUSEHOLD T | !! !! !! Renter occupied: Nonfamily households: Househol | int
+B25011_046E  | B25011.  TENURE BY HOUSEHOLD T | !! !! Renter occupied: Nonfamily households: Householder | int
+B25011_047E  | B25011.  TENURE BY HOUSEHOLD T | !! !! !! Renter occupied: Nonfamily households: Househol | int
+B25011_048E  | B25011.  TENURE BY HOUSEHOLD T | !! !! !! Renter occupied: Nonfamily households: Househol | int
+B25011_049E  | B25011.  TENURE BY HOUSEHOLD T | !! !! !! Renter occupied: Nonfamily households: Househol | int
+-------------------------------------------------------------------------------------------------------------------
+Variable     | Table                          | Label                                                    | Type
+-------------------------------------------------------------------------------------------------------------------
+B25118_001E  | B25118.  Tenure by Household I | Total:                                                   | int
+B25118_002E  | B25118.  Tenure by Household I | Owner occupied:                                          | int
+B25118_003E  | B25118.  Tenure by Household I | !! Owner occupied: Less than $5,000                      | int
+B25118_004E  | B25118.  Tenure by Household I | !! Owner occupied: $5,000 to $9,999                      | int
+B25118_005E  | B25118.  Tenure by Household I | !! Owner occupied: $10,000 to $14,999                    | int
+B25118_006E  | B25118.  Tenure by Household I | !! Owner occupied: $15,000 to $19,999                    | int
+B25118_007E  | B25118.  Tenure by Household I | !! Owner occupied: $20,000 to $24,999                    | int
+B25118_008E  | B25118.  Tenure by Household I | !! Owner occupied: $25,000 to $34,999                    | int
+B25118_009E  | B25118.  Tenure by Household I | !! Owner occupied: $35,000 to $49,999                    | int
+B25118_010E  | B25118.  Tenure by Household I | !! Owner occupied: $50,000 to $74,999                    | int
+B25118_011E  | B25118.  Tenure by Household I | !! Owner occupied: $75,000 to $99,999                    | int
+B25118_012E  | B25118.  Tenure by Household I | !! Owner occupied: $100,000 to $149,999                  | int
+B25118_013E  | B25118.  Tenure by Household I | !! Owner occupied: $150,000 or more                      | int
+B25118_014E  | B25118.  Tenure by Household I | Renter occupied:                                         | int
+B25118_015E  | B25118.  Tenure by Household I | !! Renter occupied: Less than $5,000                     | int
+B25118_016E  | B25118.  Tenure by Household I | !! Renter occupied: $5,000 to $9,999                     | int
+B25118_017E  | B25118.  Tenure by Household I | !! Renter occupied: $10,000 to $14,999                   | int
+B25118_018E  | B25118.  Tenure by Household I | !! Renter occupied: $15,000 to $19,999                   | int
+B25118_019E  | B25118.  Tenure by Household I | !! Renter occupied: $20,000 to $24,999                   | int
+B25118_020E  | B25118.  Tenure by Household I | !! Renter occupied: $25,000 to $34,999                   | int
+B25118_021E  | B25118.  Tenure by Household I | !! Renter occupied: $35,000 to $49,999                   | int
+B25118_022E  | B25118.  Tenure by Household I | !! Renter occupied: $50,000 to $74,999                   | int
+B25118_023E  | B25118.  Tenure by Household I | !! Renter occupied: $75,000 to $99,999                   | int
+B25118_024E  | B25118.  Tenure by Household I | !! Renter occupied: $100,000 to $149,999                 | int
+B25118_025E  | B25118.  Tenure by Household I | !! Renter occupied: $150,000 or more                     | int
