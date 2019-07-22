@@ -242,7 +242,7 @@ def createGraph():
     # use pandas to manipulate county demographic data & climate data
     # add attributes to nodes via dictionaries
 
-    nodeData = mergeClimateDemographic()
+    nodeData = mergeDicts()
     G = nx.complete_graph(4)
 
     nx.set_node_attributes(G, nodeData)

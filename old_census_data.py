@@ -112,8 +112,11 @@ climateData = pd.read_csv('countychangetest.csv')
 """
 
 def mergeClimateDemographic():
-    climateData = pd.read_csv('countychangetest.csv')
-    demoData = pd.read_csv('cityAttributes2.csv')
+    climateData = pd.read_csv('test_data/countychangetest.csv')
+    demoData = pd.read_csv('test_raw_data/cityAttributes2.csv')
     mergeData = pd.merge(demoData, climateData, on='id')
     mergeDataDict = mergeData.to_dict('index')
+    print(mergeDataDict)
     return(mergeDataDict)
+
+mergeClimateDemographic()
