@@ -1,8 +1,8 @@
+from census_data import *
 from mesa import Agent, Model
 from mesa.time import SimultaneousActivation
 from mesa.space import NetworkGrid
 from mesa.datacollection import DataCollector
-from census_data import *
 
 import random
 import math
@@ -19,9 +19,12 @@ tick = 0  # counter for current time step
 class ClimateMigrationModel(Model):
     def __init__(self, num_nodes, init_time=0):
         super().__init__()
-        self.num_agents = 0 # number of agents in simulation area
-        self.schedule = SimultaneousActivation(self)  # agents are updated in a random order at each time step
-        self.G = createGraph()  # agents are located on a network
+        global tick
+        tick = init_time
+        self.num_agents = 0
+        self.agent_index = 0
+        self.schedule = SimultaneousActivation(self) 
+        self.G = createGraph()
         self.num_nodes = num_nodes
         self.nodes = self.G.nodes()
         self.grid = NetworkGrid(self.G)
@@ -30,21 +33,14 @@ class ClimateMigrationModel(Model):
         self.cum_county_migration_rates = [0] * self.num_nodes
         self.deaths = [0] * self.num_nodes
         self.births = [0] * self.num_nodes
-        self.climateData = {0: {}, 1: {}, 2: {}, 3: {}}
-        global tick
-        tick = init_time
-
-        # Store model level attributes using a DataCollector object
-        self.datacollector = DataCollector(
-            model_reporters={   "County Population": lambda m1: list(m1.county_population_list), 
+        self.climateData = {0: {}, 1: {}, 2: {}, 3: {}} # model-level climate data necessary? or just easier to track?
+        self.datacollector = DataCollector(model_reporters={   
+                                "County Population": lambda m1: list(m1.county_population_list), 
                                 "County Migration Rates": lambda m2: m2.county_migration_rates,
                                 "Deaths": lambda m3: m3.deaths, "Births": lambda m4: m4.births, 
-                                "Total Population": lambda m5: m5.num_agents    }
-        )
+                                "Total Population": lambda m5: m5.num_agents})
 
     def addAgents(self):
-        countyList = list(self.nodes)
-        
         """
         populationList = [0]*self.num_nodes
         for j in range(self.num_nodes):
@@ -54,17 +50,18 @@ class ClimateMigrationModel(Model):
         self.county_population_list = populationList
         populationList = list(np.cumsum(populationList))
         self.num_agents = populationList[3]
+        self.agent_index = populationList[3]
 
         m = 0
         i = 0
+
         while i < populationList[m]:
-            a = Person(i, self)
-            self.grid.place_agent(a, countyList[m])
+            a = Household(i, self)
+            self.grid.place_agent(a, list(self.nodes)[m])
             self.schedule.add(a)
             
             a.originalPos = a.pos
             a.initialize_agent()
-            
             i += 1
 
             if i == populationList[m] and m < self.num_nodes - 1:
@@ -85,18 +82,20 @@ class ClimateMigrationModel(Model):
                 self.deaths[a.pos] += 1
                 self.grid._remove_agent(a, a.pos)
                 self.schedule.remove(a)
+                self.num_agents -= 1
         
         for m in self.county_population_list:
-            toAdd = m//30 # birth rate
+            toAdd = m//30 # birth rate, completely unfounded
+            self.num_agents += toAdd
             for i in range(toAdd):
-                self.num_agents += 1
-                a = Person(self.num_agents, self)
+                self.agent_index += 1
+                a = Household(self.agent_index, self)
                 self.grid.place_agent(a, self.county_population_list.index(m))
                 a.originalPos = a.pos
                 a.age = 18
                 a.initialize_agent()
                 self.schedule.add(a)
-                self.births[a.pos] += 1                
+                self.births[a.pos] += 1
                 
         for n in self.nodes:
             self.county_population_list[n] = len(self.G.node[n]['agent'])
@@ -133,7 +132,7 @@ class ClimateMigrationModel(Model):
         tick += 1
 
 
-class Person(Agent):
+class Household(Agent):
     def __init__(self, unique_id, model):
         super().__init__(unique_id, model)
         self.unique_id = unique_id  
@@ -247,18 +246,7 @@ class Person(Agent):
         self.make_decision()  # implement adaptation actions
 
     def updateAge(self):
-        if self.age >= 0 and self.age < 1:
-            self.age += 0.05
-        if self.age == 0.9:
-            self.age = 1
-        if self.age >= 1 and self.age < 2 :
-            self.age += 0.16 # after 6 ticks, 0.96
-        if self.age == 1.96:
-            self.age = 2
-        if self.age >= 2 and self.age < 4:
-            self.age += 0.055 # after 38 ticks, 4.09
-        if self.age >= 4:
-            self.age += 0.01
+        self.age += 1
 
     def updateNetworkLocations(self):
         self.connectedLocations = []
@@ -272,13 +260,13 @@ class Person(Agent):
         self.rankedCounties = countyList # use index to get county/node id of max
 
     def calculateMigrationProbability(self):
-        if self.age >= 1 and self.age < 2:
+        if self.age < 25:
             self.probability += 0.042
-        if self.age >= 2 and self.age < 3:
+        elif self.age < 45:
             self.probability += 0.03
-        if self.age >= 3 and self.age < 4:
+        elif self.age < 65:
             self.probability += 0.013
-        if self.age >= 4:
+        else:
             self.probability += 0.009
 
     def calculate_adaptive_capacity(self):
