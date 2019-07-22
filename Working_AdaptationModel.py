@@ -36,8 +36,10 @@ class ClimateMigrationModel(Model):
 
         # Store model level attributes using a DataCollector object
         self.datacollector = DataCollector(
-            model_reporters={"County Population": lambda m1: list(m1.county_population_list), "County Migration Rates": lambda m2: m2.county_migration_rates,
-            "Deaths": lambda m3: m3.deaths, "Births": lambda m4: m4.births, "Total Population": lambda m5: m5.num_agents}
+            model_reporters={   "County Population": lambda m1: list(m1.county_population_list), 
+                                "County Migration Rates": lambda m2: m2.county_migration_rates,
+                                "Deaths": lambda m3: m3.deaths, "Births": lambda m4: m4.births, 
+                                "Total Population": lambda m5: m5.num_agents    }
         )
 
     def addAgents(self):
@@ -48,7 +50,7 @@ class ClimateMigrationModel(Model):
         for j in range(self.num_nodes):
             populationList[j] = self.G.node[j]['total_18+'] 
         """
-        populationList = [750, 50, 60, 60]
+        populationList = [323, 26, 28, 30]
         self.county_population_list = populationList
         populationList = list(np.cumsum(populationList))
         self.num_agents = populationList[3]
@@ -56,58 +58,34 @@ class ClimateMigrationModel(Model):
         m = 0
         i = 0
         while i < populationList[m]:
-            ageListM = [self.G.node[m]['mpct1'], self.G.node[m]['mpct2'], self.G.node[m]['mpct3'], self.G.node[m]['mpct4']]
-            ageListF = [self.G.node[m]['fpct1'], self.G.node[m]['fpct2'], self.G.node[m]['fpct3'], self.G.node[m]['fpct4']]
-            cumAgeM = np.cumsum(ageListM)
-            cumAgeF = np.cumsum(ageListF)
-
             a = Person(i, self)
             self.grid.place_agent(a, countyList[m])
+            self.schedule.add(a)
+            
             a.originalPos = a.pos
-            
-            if random.random() < 0.5:
-                a.gender = 1 # male
-            
-            randNum = random.random()
-            if a.gender == 0:
-                if randNum < cumAgeM[0]:
-                    a.age = 1
-                elif randNum < cumAgeM[1]:
-                    a.age = 2
-                elif randNum < cumAgeM[2]:
-                    a.age = 3
-                else:
-                    a.age = 4
-            else:
-                if randNum < cumAgeF[0]:
-                    a.age = 1
-                elif randNum < cumAgeF[1]:
-                    a.age = 2
-                elif randNum < cumAgeF[2]:
-                    a.age = 3
-                else:
-                    a.age = 4
+            a.initialize_agent()
             
             i += 1
-            if i == populationList[m]:
-                if m < len(populationList) - 1:
-                    m += 1
-            self.schedule.add(a)
 
-    def setNetworks(self):
+            if i == populationList[m] and m < self.num_nodes - 1:
+                m += 1
+
+    def initialize_networks(self):
         for a in self.schedule.agents:
-            a.connections = random.sample(self.G.node[a.pos]['agent'], 4)
-            a.connections += random.sample(self.schedule.agents, random.randint(1, 5))
+            a.connections = random.sample(self.G.node[a.pos]['agent'], 3)
+            a.connections += random.sample(self.schedule.agents, random.randint(1, 4))
 
     def updateCountyPopulation(self):
         self.deaths = [0]*self.num_nodes
         self.births = [0]*self.num_nodes
+        
         for a in self.schedule.agents:
-            deathVariable = random.random()
-            if a.age > 4 + deathVariable: # make a lil less uniform ? - also don't have ppl dying right away...
+            deathVariable = random.randint(-5, 10)
+            if a.age > 78 + deathVariable:
                 self.deaths[a.pos] += 1
                 self.grid._remove_agent(a, a.pos)
                 self.schedule.remove(a)
+        
         for m in self.county_population_list:
             toAdd = m//30 # birth rate
             for i in range(toAdd):
@@ -115,29 +93,26 @@ class ClimateMigrationModel(Model):
                 a = Person(self.num_agents, self)
                 self.grid.place_agent(a, self.county_population_list.index(m))
                 a.originalPos = a.pos
-                self.births[a.pos] += 1
-                print(len(self.G.node[a.pos]['agent']))
-                a.connections = random.sample(self.G.node[a.pos]['agent'], 4)
-                a.connections += random.sample(self.schedule.agents, random.randint(1, 5))
-                self.schedule.add(a)                
-                if random.random() < 0.5:
-                    a.gender = 1 # male
-                a.age = 0
+                a.age = 18
+                a.initialize_agent()
+                self.schedule.add(a)
+                self.births[a.pos] += 1                
+                
         for n in self.nodes:
             self.county_population_list[n] = len(self.G.node[n]['agent'])
 
     def updateClimate(self):
         for n in self.nodes:
-            self.G.node[n]['heat2013'] += self.G.node[n]['dheat_dyear']
-            self.G.node[n]['rain2013'] += self.G.node[n]['drain_dyear']
-            self.G.node[n]['dry2013'] += self.G.node[n]['ddry_dyear']
+            self.G.node[n]['climate'][0] += self.G.node[n]['climate'][3]
+            self.G.node[n]['climate'][5] += self.G.node[n]['climate'][7]
+            self.G.node[n]['climate'][9] += self.G.node[n]['climate'][11]
 
     def calculateCurrentClimate(self):
         for n in self.nodes:
-            self.climateData[n]['heat'] = self.G.node[n]['heat2013']
-            self.climateData[n]['rain'] = self.G.node[n]['rain2013']
-            self.climateData[n]['dry'] = self.G.node[n]['dry2013']
-
+            self.climateData[n]['heat'] = self.G.node[n]['climate'][0]
+            self.climateData[n]['rain'] = self.G.node[n]['climate'][5]
+            self.climateData[n]['dry'] = self.G.node[n]['climate'][9]
+    
     def calculateMigrationRates(self):
         self.county_migration_rates = [0]*self.num_nodes
         for n in self.nodes:
@@ -164,18 +139,108 @@ class Person(Agent):
         self.unique_id = unique_id  
         self.originalPos = None
         self.age = 0
-        self.gender = 0
         self.probability = 0
-        # self.married = 0
-        # self.income = 0
+        self.household = 0 # 0 = married, 1 = other, 2 = alone, 3 = not alone
+        self.income = 0
+        self.tenure = 0 # 0 = own, 1 = rent
+        self.children = 0 # 0 = none, 1 = some
         self.connections = []  # list of all connected agents
         self.connectedLocations = []
         self.rankedCounties = []
-        self.adaptive_capacity = random.normalvariate(0, 1)  # ability to implement adaptation actions
+        self.adaptive_capacity = 0  # ability to implement adaptation actions
     
+    def initialize_agent(self):
+        self.initialize_age(random.random())
+        self.initialize_income(random.random())
+        self.initialize_tenure(random.random())
+        self.initialize_household(random.random())
+        if self.household != 3:
+            self.initialize_children(random.random())
+
+    def initialize_age(self, rand_num):
+        age_list = self.model.G.node[self.pos]['age']
+        if rand_num < age_list[0]:
+            self.age = random.randint(18, 24)
+        elif rand_num < age_list[1]:
+            self.age = random.randint(25, 44)
+        elif rand_num < age_list[2]:
+            self.age = random.randint(45, 64)
+        else:
+            self.age = random.randint(65, 80)
+
+    def initialize_income(self, rand_num):
+        if self.age < 25:
+            income_list = self.model.G.node[self.pos]['u25income']
+        elif self.age < 45:
+            income_list = self.model.G.node[self.pos]['income2544']
+        elif self.age < 65:
+            income_list = self.model.G.node[self.pos]['income4564']
+        else:
+            income_list = self.model.G.node[self.pos]['income65a']
+        
+        if rand_num < income_list[0]:
+            self.income = 0
+        elif rand_num < income_list[1]:
+            self.income = 1
+        elif rand_num < income_list[2]:
+            self.income = 2
+        elif rand_num < income_list[3]:
+            self.income = 3
+        elif rand_num < income_list[4]:
+            self.income = 4
+        elif rand_num < income_list[5]:
+            self.income = 5
+        elif rand_num < income_list[6]:
+            self.income = 6
+        elif rand_num < income_list[7]:
+            self.income = 7
+        elif rand_num < income_list[8]:
+            self.income = 8
+        else:
+            self.income = 9
+
+    def initialize_tenure(self, rand_num):
+        tenure_list = self.model.G.node[self.pos]['tenure']
+        if rand_num > tenure_list[self.income]:
+            self.tenure = 1
+    
+    def initialize_household(self, rand_num):
+        if self.age < 35:
+            if self.tenure == 0:
+                household_list = self.model.G.node[self.pos]['own1534']
+            else:
+                household_list = self.model.G.node[self.pos]['rent1534']
+        elif self.age < 65:
+            if self.tenure == 0:
+                household_list = self.model.G.node[self.pos]['own3564']
+            else:
+                household_list = self.model.G.node[self.pos]['rent3564']
+        else:
+            if self.tenure == 0:
+                household_list = self.model.G.node[self.pos]['own65a']
+            else:
+                household_list = self.model.G.node[self.pos]['rent65a']
+        
+        if rand_num < household_list[0]:
+            self.household = 0
+        elif rand_num < household_list[1]:
+            self.household = 1
+        elif rand_num < household_list[2]:
+            self.household = 2
+        else:
+            self.household = 3
+    
+    def initialize_children(self, rand_num):
+        children_list = self.model.G.node[self.pos]['children']
+        if rand_num < children_list[self.household]:
+            self.children = 1
+
+    def initialize_network(self):
+        self.connections = random.sample(self.model.G.node[self.pos]['agent'], 3)
+        self.connections += random.sample(self.model.schedule.agents, random.randint(1, 4))
+
     def step(self):
         self.updateAge()
-        self.updateNetworkLocations()
         self.calculateMigrationProbability()  # calculate new adaptative capacity
 
     def advance(self):
@@ -215,10 +280,6 @@ class Person(Agent):
             self.probability += 0.013
         if self.age >= 4:
             self.probability += 0.009
-        if self.gender == 0:
-            self.probability += 0
-        if self.gender == 1:
-            self.probability += 0.001
 
     def calculate_adaptive_capacity(self):
         self.adaptive_capacity = random.random()
@@ -229,6 +290,7 @@ class Person(Agent):
             if random.random() < self.probability:
                 self.calculate_adaptive_capacity()
                 if self.adaptive_capacity > 0.5:
+                    self.updateNetworkLocations()
                     self.rankCountiesByNetwork()
                     for i in range(len(self.rankedCounties)):
                         if currentHeat <= self.model.climateData[i]['heat']:

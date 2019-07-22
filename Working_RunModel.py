@@ -2,8 +2,7 @@ from Working_AdaptationModel import *
 import sys
 import numpy as np
 
-init_population = 180  # initial population in simulation area
-steps = 47  # number of time steps to run model
+steps = 20  # number of time steps to run model
 num_counties = 4
 
 def runClimateMigrationModel():
@@ -13,7 +12,7 @@ def runClimateMigrationModel():
     print('created model obj')
     model.addAgents()
     print('added agents')
-    model.setNetworks()
+    model.initialize_networks()
     print('set networks')
     model.calculateCurrentClimate()
     print('initial climate data')

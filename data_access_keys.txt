@@ -1,0 +1,58 @@
+DATA ACCESS KEYS
+
+age - distribution
+0: <25, 
+1: 25 to 44, 
+2: 45 to 65, 
+3: >65
+
+income - distribution by age
+[u25income, income2544, income4564, income65a]
+0: <10, 
+1: 10-15, 
+2: 15-20, 
+3: 20-25, 
+4: 25-25,
+5: 35-50,
+6: 50-75,
+7: 75-100,
+8: 100-150,
+9: >150
+
+tenure - likelihood of ownership by income
+0: <10, 
+1: 10-15, 
+2: 15-20, 
+3: 20-25, 
+4: 25-25,
+5: 35-50,
+6: 50-75,
+7: 75-100,
+8: 100-150,
+9: >150
+
+household type - distribution by tenure, age
+[rent1534, own1534, rent3564, own 3564, rent65a, own65a]
+0: family - married
+1: family - other
+2: nonfamily - alone
+3: nonfamily - not alone
+
+children - likelihood of having children by household
+0: family - married
+1: family - other
+2: non-family - not alone
+
+climate
+0: heat2013
+1: heat2060
+3: dheat_dyear
+4: dheat_dmonth
+5: rain2013
+6: rain2060
+7: drain_dyear
+8: drain_dmonth
+9: dry2013
+10: dry2060
+11: ddry_dyear
+12: ddry_dmonth

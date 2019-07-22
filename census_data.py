@@ -80,8 +80,9 @@ def mergeDicts():
     own65a = csvToDict('test_data/household65aown.csv', 'own65a')
     # different method - don't need to cumsum (!)
     children = csvToDict_noCumSum('test_data/pcthouseholdu18.csv', 'children')
+    climate = csvToDict_noCumSum('test_data/countychangetest.csv', 'climate')
     bigDict = collections.defaultdict(dict)
-    for d in [ageData, u25income, income2544, income4564, income65a, tenure, rent1534, own1534, rent3564, own3564, rent65a, own65a, children]:
+    for d in [ageData, u25income, income2544, income4564, income65a, tenure, rent1534, own1534, rent3564, own3564, rent65a, own65a, children, climate]:
         for k, v in d.items():
             bigDict[k].update(v)
     return bigDict
