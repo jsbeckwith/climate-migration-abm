@@ -14,10 +14,10 @@ def runClimateMigrationModel():
     print('added agents')
     model.initialize_networks()
     print('set networks')
-    model.calculateCurrentClimate()
+    # model.calculateCurrentClimate()
     print('initial climate data')
     model.datacollector.collect(model)  # collect initial model state variables
-
+    # note - can store model configuration using 'pickle' for repeated runs
     for i in range(steps):
         model.step()
     
