@@ -1,6 +1,7 @@
 import pandas as pd
 import censusdata
 import collections
+import pickle
 
 pd.set_option('display.expand_frame_repr', False)
 
@@ -86,3 +87,7 @@ def mergeDicts():
         for k, v in d.items():
             bigDict[k].update(v)
     return bigDict
+
+test_data_dict = mergeDicts()
+with open('test_data_dict.pickle', 'wb') as f:
+    pickle.dump(test_data_dict, f, pickle.DEFAULT_PROTOCOL)
