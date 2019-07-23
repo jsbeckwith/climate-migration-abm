@@ -3,6 +3,7 @@ from mesa import Agent, Model
 from mesa.time import SimultaneousActivation
 from mesa.space import NetworkGrid
 from mesa.datacollection import DataCollector
+from statistics import mean
 
 import random
 import math
@@ -47,7 +48,7 @@ class ClimateMigrationModel(Model):
             populationList[j] = self.G.node[j]['total_18+'] 
         """
         # clean this up it is gross
-        populationList = [323, 26, 28, 30]
+        populationList = [32300, 2600, 2800, 3000]
         self.county_population_list = populationList
         populationList = list(np.cumsum(populationList))
         self.num_agents = populationList[3]
@@ -158,7 +159,7 @@ class Household(Agent):
         self.unique_id = unique_id  
         self.originalPos = None
         self.age = 0
-        self.probability = [0] * 3 # age, tenure, children
+        self.probability = [0] * 2 # age, tenure, children
         self.household = 0 # 0 = married, 1 = other, 2 = alone, 3 = not alone
         self.income = 0
         self.tenure = 0 # 0 = own, 1 = rent
@@ -302,25 +303,26 @@ class Household(Agent):
         self.adaptive_capacity = self.income/10
 
     def make_decision(self):
-        # factor in all climate data
-        current_heat = self.model.G.node[self.pos]['climate'][0]
-        current_rain = self.model.G.node[self.pos]['climate'][5]
-        current_dry = self.model.G.node[self.pos]['climate'][9]
+        if random.random() < mean(self.probability):
+            
+            to_choose = []
+            to_move = None
 
-        """
-        if currentHeat > 30:
-            # average probability-list
-            if random.random() < self.probability:
-                self.calculate_adaptive_capacity()
-                if self.adaptive_capacity > 0.5:
-                    self.updateNetworkLocations()
-                    self.rank_counties_by_network()
-                    for i in range(len(self.rankedCounties)):
-                        if currentHeat <= self.model.climateData[i]['heat']:
-                            self.rankedCounties[i] = -1
-                    maxNetworkCounty = self.rankedCounties.index(max(self.rankedCounties)) # MAX WILL RETURN FIRST VALUE IF A TIE
-                    self.model.grid.move_agent(self, maxNetworkCounty)
-        """
+            for i in range(self.model.num_nodes):
+                if self.pos != i:
+                    if self.model.G.get_edge_data(self.pos, i)['distance'] < ((self.income+1) * 300):
+                        to_choose.append(i)
+
+            self.rank_counties_by_network()
+            
+            for i in range(len(self.counties_by_network)):
+                if self.pos != i:
+                    for j in range(self.counties_by_network[i]//2):
+                        to_choose.append(i)
+            
+            if to_choose:
+                to_move = random.choice(to_choose)
+                self.model.grid.move_agent(self, to_move)
 
 def createGraph():
     # create a perfectly connected graph of all counties (k^78)

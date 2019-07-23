@@ -2,7 +2,7 @@ from Working_AdaptationModel import *
 import sys
 import numpy as np
 
-steps = 20  # number of time steps to run model
+steps = 47  # number of time steps to run model
 num_counties = 4
 
 def runClimateMigrationModel():
@@ -19,6 +19,7 @@ def runClimateMigrationModel():
     model.datacollector.collect(model)  # collect initial model state variables
     # note - can store model configuration using 'pickle' for repeated runs
     for i in range(steps):
+        print('step', i)
         model.step()
     
     model_attributes = model.datacollector.get_model_vars_dataframe()  # store model level state variables in dataframe

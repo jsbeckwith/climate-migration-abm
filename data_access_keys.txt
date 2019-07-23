@@ -43,7 +43,7 @@ children - likelihood of having children by household
 1: family - other
 2: non-family - not alone
 
-climate
+climate - NOTE THAT THIS IS DIFFERENT FOR REAL DATA
 0: heat2013
 1: heat2060
 3: dheat_dyear
