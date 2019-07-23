@@ -46,6 +46,7 @@ class ClimateMigrationModel(Model):
         for j in range(self.num_nodes):
             populationList[j] = self.G.node[j]['total_18+'] 
         """
+        # clean this up it is gross
         populationList = [323, 26, 28, 30]
         self.county_population_list = populationList
         populationList = list(np.cumsum(populationList))
@@ -77,6 +78,7 @@ class ClimateMigrationModel(Model):
         self.births = [0]*self.num_nodes
         
         for a in self.schedule.agents:
+            # better/more accurate way to do this? lol
             deathVariable = random.randint(-5, 10)
             if a.age > 78 + deathVariable:
                 self.deaths[a.pos] += 1
@@ -85,7 +87,8 @@ class ClimateMigrationModel(Model):
                 self.num_agents -= 1
         
         for m in self.county_population_list:
-            toAdd = m//30 # birth rate, completely unfounded
+            # better/more accurate way to do this? lol
+            toAdd = m//30 # birth rate
             self.num_agents += toAdd
             for i in range(toAdd):
                 self.agent_index += 1
@@ -101,12 +104,14 @@ class ClimateMigrationModel(Model):
             self.county_population_list[n] = len(self.G.node[n]['agent'])
 
     def updateClimate(self):
+        # explain numbers ? also, more sophisticated than linear ?
         for n in self.nodes:
             self.G.node[n]['climate'][0] += self.G.node[n]['climate'][3]
             self.G.node[n]['climate'][5] += self.G.node[n]['climate'][7]
             self.G.node[n]['climate'][9] += self.G.node[n]['climate'][11]
 
     def calculateCurrentClimate(self):
+        # necessary ? - how to collect/show model-level data is the bigger question
         for n in self.nodes:
             self.climateData[n]['heat'] = self.G.node[n]['climate'][0]
             self.climateData[n]['rain'] = self.G.node[n]['climate'][5]
@@ -138,7 +143,7 @@ class Household(Agent):
         self.unique_id = unique_id  
         self.originalPos = None
         self.age = 0
-        self.probability = 0
+        self.probability = [0] * 3 # age, tenure, children
         self.household = 0 # 0 = married, 1 = other, 2 = alone, 3 = not alone
         self.income = 0
         self.tenure = 0 # 0 = own, 1 = rent
@@ -240,10 +245,10 @@ class Household(Agent):
 
     def step(self):
         self.updateAge()
-        self.calculateMigrationProbability()  # calculate new adaptative capacity
+        self.calculateMigrationProbability()
 
     def advance(self):
-        self.make_decision()  # implement adaptation actions
+        self.make_decision()
 
     def updateAge(self):
         self.age += 1
@@ -261,20 +266,35 @@ class Household(Agent):
 
     def calculateMigrationProbability(self):
         if self.age < 25:
-            self.probability += 0.042
+            self.probability[0] += 0.179
+        elif self.age < 29:
+            self.probability[0] += 0.248
         elif self.age < 45:
-            self.probability += 0.03
+            self.probability[0] += 0.156
         elif self.age < 65:
-            self.probability += 0.013
+            self.probability[0] += 0.082
+        elif self.age < 75:
+            self.probability[0] += 0.064
         else:
-            self.probability += 0.009
+            self.probability[0] += 0.046
+        
+        if self.tenure == 0:
+            self.probability[1] += 0.084
+        else:
+            self.probability[1] += 0.212
+
+        # figure out heuristic for children, household type
 
     def calculate_adaptive_capacity(self):
+        # implement income, age, household type
         self.adaptive_capacity = random.random()
 
     def make_decision(self):
+        # completely revamp
+        # factor in all climate data
         currentHeat = self.model.climateData[self.pos]['heat']
         if currentHeat > 30:
+            # average probability-list
             if random.random() < self.probability:
                 self.calculate_adaptive_capacity()
                 if self.adaptive_capacity > 0.5:
@@ -289,14 +309,13 @@ class Household(Agent):
 def createGraph():
     # create a perfectly connected graph of all counties (k^78)
     # G_counties = nx.complete_graph(78)
-    # use pandas to manipulate county demographic data & climate data
-    # add attributes to nodes via dictionaries
+    
+    with open('test_data_dict.pickle', 'rb') as f:
+        node_data = pickle.load(f)
 
-    nodeData = mergeDicts()
     G = nx.complete_graph(4)
-
-    nx.set_node_attributes(G, nodeData)
-    # need to figure out a better way to do this - eventually
+    nx.set_node_attributes(G, node_data)
+    # need to figure out a better way to do this eventually
     nx.set_edge_attributes(G, {(0, 1): 2294, (0, 2): 2591, (0, 3): 826, (1, 2): 394, (1, 3): 2347, (2, 3): 2532}, 'distance')
 
     return G
