@@ -2,8 +2,8 @@ from Working_AdaptationModel import *
 import sys
 import numpy as np
 
-steps = 40 # number of time steps to run model
-num_counties = 4
+steps = 5 # number of time steps to run model
+num_counties = 73
 
 def runClimateMigrationModel():
 
@@ -23,7 +23,6 @@ def runClimateMigrationModel():
         model.step()
     
     model_attributes = model.datacollector.get_model_vars_dataframe()  # store model level state variables in dataframe
-    return model_attributes
+    model_attributes.to_csv('output.csv')
 
-data = runClimateMigrationModel()
-print(data)
+runClimateMigrationModel()

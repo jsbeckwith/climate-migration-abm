@@ -1,0 +1,74 @@
+name,state,county
+Alameda,06,001
+Allegheny,42,003
+Allen,18,003
+Arapoe,08,005
+Baltimore City,24,510
+Bernalillo,35,001
+Bexar,48,029
+Clark,32,003
+Collin,48,085
+Cook,17,031
+Cuyahoga,39,035
+Dallas,48,113
+Dane,55,025
+Davidson,47,037
+Denver,08,031
+District of Columbia,11,001
+Douglas,31,055
+Durham,37,063
+Duvall,12,031
+El Paso,48,141
+Erie,36,029
+Essex,34,013
+Fayette,21,067
+Franklin,39,049
+Fresno,06,019
+Fulton,13,121
+Guilford,37,081
+Hamilton,39,061
+Harris,48,201
+Hennepin,27,053
+Hillsborough,12,057
+Hudson,34,017
+Jackson,29,095
+Jefferson,21,111
+Kern,06,029
+King,53,033
+Lancaster,31,109
+Los Angeles,06,037
+Lubbock,48,303
+Lucas,39,095
+Maricopa,04,013
+Marion,18,097
+Mecklenburg,37,119
+Miami-Dade,12,086
+Milwaukee,55,079
+Multnomah,41,051
+New York,36,061
+Nueces,48,355
+Oklahoma,40,109
+Orange_CA,06,059
+Orange_FL,12,086
+Orleans Parish,22,071
+Philadelphia,42,101
+Pima,04,019
+Pinellas,12,103
+Ramsey,27,123
+Riverside,06,065
+Sacramento,06,067
+San Diego,06,073
+San Francisco,06,075
+San Joaquin,06,077
+Santa Clara,06,085
+Sedgwick,20,173
+Shelby,47,157
+St. Louis City,29,189
+Suffolk,25,025
+Tarrant,48,439
+Travis,48,453
+Tulsa,40,143
+Virginia Beach City,51,810
+Wake,37,183
+Wayne,26,163
+Webb,48,479

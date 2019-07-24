@@ -42,22 +42,15 @@ class ClimateMigrationModel(Model):
                                 "Total Population": lambda m5: m5.num_agents})
 
     def addAgents(self):
-        """
-        populationList = [0]*self.num_nodes
-        for j in range(self.num_nodes):
-            populationList[j] = self.G.node[j]['total_18+'] 
-        """
-        # clean this up it is gross
-        populationList = [320, 20, 25, 30]
-        self.county_population_list = populationList
-        populationList = list(np.cumsum(populationList))
-        self.num_agents = populationList[3]
-        self.agent_index = populationList[3]
+        cumulative_population_list = get_cumulative_population_list()
+        self.county_population_list = get_population_list()
+        self.num_agents = cumulative_population_list[72]
+        self.agent_index = cumulative_population_list[72]
 
         m = 0
         i = 0
 
-        while i < populationList[m]:
+        while i < cumulative_population_list[m]:
             a = Household(i, self)
             self.grid.place_agent(a, list(self.nodes)[m])
             self.schedule.add(a)
@@ -66,7 +59,7 @@ class ClimateMigrationModel(Model):
             a.initialize_agent()
             i += 1
 
-            if i == populationList[m] and m < self.num_nodes - 1:
+            if i == cumulative_population_list[m] and m < self.num_nodes - 1:
                 m += 1
 
     def initialize_networks(self):
@@ -113,9 +106,9 @@ class ClimateMigrationModel(Model):
     def updateClimate(self):
         # explain numbers ? also, more sophisticated than linear ?
         for n in self.nodes:
-            self.G.node[n]['climate'][0] += self.G.node[n]['climate'][3]
-            self.G.node[n]['climate'][5] += self.G.node[n]['climate'][7]
-            self.G.node[n]['climate'][9] += self.G.node[n]['climate'][11]
+            self.G.node[n]['climate'][1] += self.G.node[n]['climate'][3]
+            self.G.node[n]['climate'][4] += self.G.node[n]['climate'][6]
+            self.G.node[n]['climate'][7] += self.G.node[n]['climate'][9]
 
     def rank_by_climate(self):
         # necessary ? - how to collect/show model-level data is the bigger question
@@ -124,8 +117,8 @@ class ClimateMigrationModel(Model):
         heat_dry_data = []
         
         for n in self.nodes:
-            heat_data.append(self.G.node[n]['climate'][0])
-            dry_data.append(self.G.node[n]['climate'][9])
+            heat_data.append(self.G.node[n]['climate'][1])
+            dry_data.append(self.G.node[n]['climate'][7])
         
         max_heat = max(heat_data)
         max_dry = max(dry_data)
@@ -313,13 +306,14 @@ class Household(Agent):
             to_choose = []
             to_move = None
             radius = (self.income + 1) * 300
+            """
             for i in range(self.model.num_nodes):
                 if self.pos != i:
                     distance = self.model.G.get_edge_data(self.pos, i)['distance']
                     if distance < radius:
                         for j in range(3000//distance):
                             to_choose.append(i)
-
+            """
             self.rank_counties_by_network()
 
             for i in range(len(self.counties_by_network)):
@@ -335,12 +329,12 @@ def createGraph():
     # create a perfectly connected graph of all counties (k^78)
     # G_counties = nx.complete_graph(78)
     
-    with open('test_data_dict.pickle', 'rb') as f:
+    with open('real_data_dict.pickle', 'rb') as f:
         node_data = pickle.load(f)
 
-    G = nx.complete_graph(4)
+    G = nx.complete_graph(73)
     nx.set_node_attributes(G, node_data)
     # need to figure out a better way to do this eventually
-    nx.set_edge_attributes(G, {(0, 1): 2294, (0, 2): 2591, (0, 3): 826, (1, 2): 394, (1, 3): 2347, (2, 3): 2532}, 'distance')
+    # nx.set_edge_attributes(G, {(0, 1): 2294, (0, 2): 2591, (0, 3): 826, (1, 2): 394, (1, 3): 2347, (2, 3): 2532}, 'distance')
 
     return G
