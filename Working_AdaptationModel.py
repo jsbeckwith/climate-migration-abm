@@ -33,8 +33,8 @@ class ClimateMigrationModel(Model):
         self.county_population_list = [0] * self.num_nodes
         self.county_migration_rates = [0] * self.num_nodes
         self.cum_county_migration_rates = [0] * self.num_nodes
-        self.deaths = [0] * self.num_nodes
-        self.births = [0] * self.num_nodes
+        self.deaths = []
+        self.births = []
         self.datacollector = DataCollector(model_reporters={   
                                 "County Population": lambda m1: list(m1.county_population_list), 
                                 "County Migration Rates": lambda m2: m2.county_migration_rates,
@@ -48,7 +48,7 @@ class ClimateMigrationModel(Model):
             populationList[j] = self.G.node[j]['total_18+'] 
         """
         # clean this up it is gross
-        populationList = [32300, 2600, 2800, 3000]
+        populationList = [320, 20, 25, 30]
         self.county_population_list = populationList
         populationList = list(np.cumsum(populationList))
         self.num_agents = populationList[3]
@@ -71,8 +71,8 @@ class ClimateMigrationModel(Model):
 
     def initialize_networks(self):
         for a in self.schedule.agents:
-            a.connections = random.sample(self.G.node[a.pos]['agent'], 3)
-            a.connections += random.sample(self.schedule.agents, random.randint(1, 4))
+            a.connections = random.sample(self.G.node[a.pos]['agent'], 2)
+            a.connections += random.sample(self.schedule.agents, random.randint(1, 2))
 
     def updateCountyPopulation(self):
         self.deaths = [0]*self.num_nodes
@@ -87,18 +87,24 @@ class ClimateMigrationModel(Model):
                 self.schedule.remove(a)
                 self.num_agents -= 1
         
-        for m in self.county_population_list:
+        for m in range(self.num_nodes):
             # better/more accurate way to do this? lol
-            toAdd = m//30 # birth rate
+            current_population = self.county_population_list[m]
+            toAdd = current_population//30 # birth rate
             self.num_agents += toAdd
             for i in range(toAdd):
+                
                 self.agent_index += 1
+                
                 a = Household(self.agent_index, self)
-                self.grid.place_agent(a, self.county_population_list.index(m))
+                self.grid.place_agent(a, m)
+                self.schedule.add(a)
+
                 a.originalPos = a.pos
                 a.age = 18
                 a.initialize_agent()
-                self.schedule.add(a)
+                a.initialize_network()
+                
                 self.births[a.pos] += 1
                 
         for n in self.nodes:
@@ -172,9 +178,9 @@ class Household(Agent):
         self.initialize_age(random.random())
         self.initialize_income(random.random())
         self.initialize_tenure(random.random())
-        self.initialize_household(random.random())
-        if self.household != 3:
-            self.initialize_children(random.random())
+        # self.initialize_household(random.random())
+        # if self.household != 3:
+            # self.initialize_children(random.random())
 
     def initialize_age(self, rand_num):
         age_list = self.model.G.node[self.pos]['age']
@@ -255,8 +261,8 @@ class Household(Agent):
             self.children = 1
 
     def initialize_network(self):
-        self.connections = random.sample(self.model.G.node[self.pos]['agent'], 3)
-        self.connections += random.sample(self.model.schedule.agents, random.randint(1, 4))
+        self.connections = random.sample(self.model.G.node[self.pos]['agent'], 2)
+        self.connections += random.sample(self.model.schedule.agents, random.randint(1, 2))
 
     def step(self):
         self.updateAge()
@@ -304,17 +310,18 @@ class Household(Agent):
 
     def make_decision(self):
         if random.random() < mean(self.probability):
-            
             to_choose = []
             to_move = None
-
+            radius = (self.income + 1) * 300
             for i in range(self.model.num_nodes):
                 if self.pos != i:
-                    if self.model.G.get_edge_data(self.pos, i)['distance'] < ((self.income+1) * 300):
-                        to_choose.append(i)
+                    distance = self.model.G.get_edge_data(self.pos, i)['distance']
+                    if distance < radius:
+                        for j in range(3000//distance):
+                            to_choose.append(i)
 
             self.rank_counties_by_network()
-            
+
             for i in range(len(self.counties_by_network)):
                 if self.pos != i:
                     for j in range(self.counties_by_network[i]//2):

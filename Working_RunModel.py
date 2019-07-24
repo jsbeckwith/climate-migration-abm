@@ -2,7 +2,7 @@ from Working_AdaptationModel import *
 import sys
 import numpy as np
 
-steps = 47  # number of time steps to run model
+steps = 40 # number of time steps to run model
 num_counties = 4
 
 def runClimateMigrationModel():
