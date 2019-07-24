@@ -111,15 +111,3 @@ def get_population_list():
     populationData = pd.read_csv('real_data/real_raw_data/raw_totalhousehold.csv')
     popDict = populationData.to_dict('list')
     return popDict['total_pop_1000']
-
-get_cumulative_population_list()
-"""
-ageData = pd.read_csv(filepath)
-cumAgeData = ageData.cumsum(axis=1, skipna=True)
-transAgeData = cumAgeData.transpose()
-ageDataDict = transAgeData.to_dict('list')
-ageData_toMerge = collections.defaultdict(dict)
-for i in range(73):
-    ageData_toMerge[i][name] = ageDataDict[i]
-return ageData_toMerge
-"""

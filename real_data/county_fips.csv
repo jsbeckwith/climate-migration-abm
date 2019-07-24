@@ -1,70 +1,70 @@
 name,state,county
-Alameda,06,001
-Allegheny,42,003
-Allen,18,003
-Arapoe,08,005
+Alameda,6,1
+Allegheny,42,3
+Allen,18,3
+Arapoe,8,5
 Baltimore City,24,510
-Bernalillo,35,001
-Bexar,48,029
-Clark,32,003
-Collin,48,085
-Cook,17,031
-Cuyahoga,39,035
+Bernalillo,35,1
+Bexar,48,29
+Clark,32,3
+Collin,48,85
+Cook,17,31
+Cuyahoga,39,35
 Dallas,48,113
-Dane,55,025
-Davidson,47,037
-Denver,08,031
-District of Columbia,11,001
-Douglas,31,055
-Durham,37,063
-Duvall,12,031
+Dane,55,25
+Davidson,47,37
+Denver,8,31
+District of Columbia,11,1
+Douglas,31,55
+Durham,37,63
+Duvall,12,31
 El Paso,48,141
-Erie,36,029
-Essex,34,013
-Fayette,21,067
-Franklin,39,049
-Fresno,06,019
+Erie,36,29
+Essex,34,13
+Fayette,21,67
+Franklin,39,49
+Fresno,6,19
 Fulton,13,121
-Guilford,37,081
-Hamilton,39,061
+Guilford,37,81
+Hamilton,39,61
 Harris,48,201
-Hennepin,27,053
-Hillsborough,12,057
-Hudson,34,017
-Jackson,29,095
+Hennepin,27,53
+Hillsborough,12,57
+Hudson,34,17
+Jackson,29,95
 Jefferson,21,111
-Kern,06,029
-King,53,033
+Kern,6,29
+King,53,33
 Lancaster,31,109
-Los Angeles,06,037
+Los Angeles,6,37
 Lubbock,48,303
-Lucas,39,095
-Maricopa,04,013
-Marion,18,097
+Lucas,39,95
+Maricopa,4,13
+Marion,18,97
 Mecklenburg,37,119
-Miami-Dade,12,086
-Milwaukee,55,079
-Multnomah,41,051
-New York,36,061
+Miami-Dade,12,86
+Milwaukee,55,79
+Multnomah,41,51
+New York,36,61
 Nueces,48,355
 Oklahoma,40,109
-Orange_CA,06,059
-Orange_FL,12,086
-Orleans Parish,22,071
+Orange_CA,6,59
+Orange_FL,12,86
+Orleans Parish,22,71
 Philadelphia,42,101
-Pima,04,019
+Pima,4,19
 Pinellas,12,103
 Ramsey,27,123
-Riverside,06,065
-Sacramento,06,067
-San Diego,06,073
-San Francisco,06,075
-San Joaquin,06,077
-Santa Clara,06,085
+Riverside,6,65
+Sacramento,6,67
+San Diego,6,73
+San Francisco,6,75
+San Joaquin,6,77
+Santa Clara,6,85
 Sedgwick,20,173
 Shelby,47,157
 St. Louis City,29,189
-Suffolk,25,025
+Suffolk,25,25
 Tarrant,48,439
 Travis,48,453
 Tulsa,40,143
