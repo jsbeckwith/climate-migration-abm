@@ -3,6 +3,7 @@ from mesa import Agent, Model
 from mesa.time import SimultaneousActivation
 from mesa.space import NetworkGrid
 from mesa.datacollection import DataCollector
+from statistics import mean
 
 import random
 import math
@@ -28,12 +29,12 @@ class ClimateMigrationModel(Model):
         self.num_nodes = num_nodes
         self.nodes = self.G.nodes()
         self.grid = NetworkGrid(self.G)
+        self.county_climate_ranking = []
         self.county_population_list = [0] * self.num_nodes
         self.county_migration_rates = [0] * self.num_nodes
         self.cum_county_migration_rates = [0] * self.num_nodes
-        self.deaths = [0] * self.num_nodes
-        self.births = [0] * self.num_nodes
-        self.climateData = {0: {}, 1: {}, 2: {}, 3: {}} # model-level climate data necessary? or just easier to track?
+        self.deaths = []
+        self.births = []
         self.datacollector = DataCollector(model_reporters={   
                                 "County Population": lambda m1: list(m1.county_population_list), 
                                 "County Migration Rates": lambda m2: m2.county_migration_rates,
@@ -41,22 +42,15 @@ class ClimateMigrationModel(Model):
                                 "Total Population": lambda m5: m5.num_agents})
 
     def addAgents(self):
-        """
-        populationList = [0]*self.num_nodes
-        for j in range(self.num_nodes):
-            populationList[j] = self.G.node[j]['total_18+'] 
-        """
-        # clean this up it is gross
-        populationList = [323, 26, 28, 30]
-        self.county_population_list = populationList
-        populationList = list(np.cumsum(populationList))
-        self.num_agents = populationList[3]
-        self.agent_index = populationList[3]
+        cumulative_population_list = get_cumulative_population_list()
+        self.county_population_list = get_population_list()
+        self.num_agents = cumulative_population_list[72]
+        self.agent_index = cumulative_population_list[72]
 
         m = 0
         i = 0
 
-        while i < populationList[m]:
+        while i < cumulative_population_list[m]:
             a = Household(i, self)
             self.grid.place_agent(a, list(self.nodes)[m])
             self.schedule.add(a)
@@ -65,13 +59,13 @@ class ClimateMigrationModel(Model):
             a.initialize_agent()
             i += 1
 
-            if i == populationList[m] and m < self.num_nodes - 1:
+            if i == cumulative_population_list[m] and m < self.num_nodes - 1:
                 m += 1
 
     def initialize_networks(self):
         for a in self.schedule.agents:
-            a.connections = random.sample(self.G.node[a.pos]['agent'], 3)
-            a.connections += random.sample(self.schedule.agents, random.randint(1, 4))
+            a.connections = random.sample(self.G.node[a.pos]['agent'], 2)
+            a.connections += random.sample(self.schedule.agents, random.randint(1, 2))
 
     def updateCountyPopulation(self):
         self.deaths = [0]*self.num_nodes
@@ -86,18 +80,24 @@ class ClimateMigrationModel(Model):
                 self.schedule.remove(a)
                 self.num_agents -= 1
         
-        for m in self.county_population_list:
+        for m in range(self.num_nodes):
             # better/more accurate way to do this? lol
-            toAdd = m//30 # birth rate
+            current_population = self.county_population_list[m]
+            toAdd = current_population//30 # birth rate
             self.num_agents += toAdd
             for i in range(toAdd):
+                
                 self.agent_index += 1
+                
                 a = Household(self.agent_index, self)
-                self.grid.place_agent(a, self.county_population_list.index(m))
+                self.grid.place_agent(a, m)
+                self.schedule.add(a)
+
                 a.originalPos = a.pos
                 a.age = 18
                 a.initialize_agent()
-                self.schedule.add(a)
+                a.initialize_network()
+                
                 self.births[a.pos] += 1
                 
         for n in self.nodes:
@@ -106,17 +106,32 @@ class ClimateMigrationModel(Model):
     def updateClimate(self):
         # explain numbers ? also, more sophisticated than linear ?
         for n in self.nodes:
-            self.G.node[n]['climate'][0] += self.G.node[n]['climate'][3]
-            self.G.node[n]['climate'][5] += self.G.node[n]['climate'][7]
-            self.G.node[n]['climate'][9] += self.G.node[n]['climate'][11]
+            self.G.node[n]['climate'][1] += self.G.node[n]['climate'][3]
+            self.G.node[n]['climate'][4] += self.G.node[n]['climate'][6]
+            self.G.node[n]['climate'][7] += self.G.node[n]['climate'][9]
 
-    def calculateCurrentClimate(self):
+    def rank_by_climate(self):
         # necessary ? - how to collect/show model-level data is the bigger question
+        heat_data = []
+        dry_data = []
+        heat_dry_data = []
+        
         for n in self.nodes:
-            self.climateData[n]['heat'] = self.G.node[n]['climate'][0]
-            self.climateData[n]['rain'] = self.G.node[n]['climate'][5]
-            self.climateData[n]['dry'] = self.G.node[n]['climate'][9]
-    
+            heat_data.append(self.G.node[n]['climate'][1])
+            dry_data.append(self.G.node[n]['climate'][7])
+        
+        max_heat = max(heat_data)
+        max_dry = max(dry_data)
+        heat_data = [(e/max_heat) for e in heat_data]
+        dry_data = [(e/max_dry) for e in dry_data]
+        
+        for i in range(self.num_nodes):
+            heat_dry_data.append(heat_data[i] + dry_data[i])
+        
+        heat_dry_data = np.array(heat_dry_data)
+        county_climate_rank = np.argsort(heat_dry_data)
+        self.county_climate_ranking = list(county_climate_rank)
+
     def calculateMigrationRates(self):
         self.county_migration_rates = [0]*self.num_nodes
         for n in self.nodes:
@@ -131,7 +146,7 @@ class ClimateMigrationModel(Model):
         self.schedule.step() 
         self.updateCountyPopulation()
         self.updateClimate()
-        self.calculateCurrentClimate()
+        self.rank_by_climate()
         self.calculateMigrationRates()
         self.datacollector.collect(self)  
         tick += 1
@@ -143,23 +158,22 @@ class Household(Agent):
         self.unique_id = unique_id  
         self.originalPos = None
         self.age = 0
-        self.probability = [0] * 3 # age, tenure, children
+        self.probability = [0] * 2 # age, tenure, children
         self.household = 0 # 0 = married, 1 = other, 2 = alone, 3 = not alone
         self.income = 0
         self.tenure = 0 # 0 = own, 1 = rent
         self.children = 0 # 0 = none, 1 = some
         self.connections = []  # list of all connected agents
-        self.connectedLocations = []
-        self.rankedCounties = []
+        self.counties_by_network = []
         self.adaptive_capacity = 0  # ability to implement adaptation actions
     
     def initialize_agent(self):
         self.initialize_age(random.random())
         self.initialize_income(random.random())
         self.initialize_tenure(random.random())
-        self.initialize_household(random.random())
-        if self.household != 3:
-            self.initialize_children(random.random())
+        # self.initialize_household(random.random())
+        # if self.household != 3:
+            # self.initialize_children(random.random())
 
     def initialize_age(self, rand_num):
         age_list = self.model.G.node[self.pos]['age']
@@ -240,8 +254,8 @@ class Household(Agent):
             self.children = 1
 
     def initialize_network(self):
-        self.connections = random.sample(self.model.G.node[self.pos]['agent'], 3)
-        self.connections += random.sample(self.model.schedule.agents, random.randint(1, 4))
+        self.connections = random.sample(self.model.G.node[self.pos]['agent'], 2)
+        self.connections += random.sample(self.model.schedule.agents, random.randint(1, 2))
 
     def step(self):
         self.updateAge()
@@ -252,17 +266,14 @@ class Household(Agent):
 
     def updateAge(self):
         self.age += 1
-
-    def updateNetworkLocations(self):
-        self.connectedLocations = []
-        for i in range(len(self.connections)):
-            self.connectedLocations.append(self.connections[i].pos)
     
-    def rankCountiesByNetwork(self):
-        countyList = [0]*self.model.num_nodes
-        for n in self.connectedLocations:
-            countyList[n] += 1
-        self.rankedCounties = countyList # use index to get county/node id of max
+    def rank_counties_by_network(self):
+        connected_locations = []
+        self.counties_by_network = [0]*self.model.num_nodes
+        for i in range(len(self.connections)):
+            connected_locations.append(self.connections[i].pos)
+        for n in connected_locations:
+            self.counties_by_network[n] += 1
 
     def calculateMigrationProbability(self):
         if self.age < 25:
@@ -284,38 +295,45 @@ class Household(Agent):
             self.probability[1] += 0.212
 
         # figure out heuristic for children, household type
+        # random distribution ?
 
     def calculate_adaptive_capacity(self):
-        # implement income, age, household type
-        self.adaptive_capacity = random.random()
+        # how might it change with age, household type?
+        self.adaptive_capacity = self.income/10
 
     def make_decision(self):
-        # completely revamp
-        # factor in all climate data
-        currentHeat = self.model.climateData[self.pos]['heat']
-        if currentHeat > 30:
-            # average probability-list
-            if random.random() < self.probability:
-                self.calculate_adaptive_capacity()
-                if self.adaptive_capacity > 0.5:
-                    self.updateNetworkLocations()
-                    self.rankCountiesByNetwork()
-                    for i in range(len(self.rankedCounties)):
-                        if currentHeat <= self.model.climateData[i]['heat']:
-                            self.rankedCounties[i] = -1
-                    maxNetworkCounty = self.rankedCounties.index(max(self.rankedCounties)) # MAX WILL RETURN FIRST VALUE IF A TIE
-                    self.model.grid.move_agent(self, maxNetworkCounty)
+        if random.random() < mean(self.probability):
+            to_choose = []
+            to_move = None
+            radius = (self.income + 1) * 300
+
+            for i in range(self.model.num_nodes):
+                if self.pos != i:
+                    distance = self.model.G.get_edge_data(self.pos, i)['distance']
+                    if distance < radius:
+                        for j in range(3000//distance):
+                            to_choose.append(i)
+
+            self.rank_counties_by_network()
+
+            for i in range(len(self.counties_by_network)):
+                if self.pos != i:
+                    for j in range(self.counties_by_network[i]//2):
+                        to_choose.append(i)
+            
+            if to_choose:
+                to_move = random.choice(to_choose)
+                self.model.grid.move_agent(self, to_move)
 
 def createGraph():
-    # create a perfectly connected graph of all counties (k^78)
-    # G_counties = nx.complete_graph(78)
-    
-    with open('test_data_dict.pickle', 'rb') as f:
-        node_data = pickle.load(f)
+    with open('real_data_dict.pickle', 'rb') as node_data_file:
+        node_data = pickle.load(node_data_file)
 
-    G = nx.complete_graph(4)
+    with open('distance_dict.pickle', 'rb') as edge_data_file:
+        edge_data = pickle.load(edge_data_file)
+
+    G = nx.complete_graph(74)
     nx.set_node_attributes(G, node_data)
-    # need to figure out a better way to do this eventually
-    nx.set_edge_attributes(G, {(0, 1): 2294, (0, 2): 2591, (0, 3): 826, (1, 2): 394, (1, 3): 2347, (2, 3): 2532}, 'distance')
-
+    nx.set_edge_attributes(G, edge_data, 'distance')
+    
     return G

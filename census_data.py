@@ -34,17 +34,23 @@ def createShells(tableCode, startShell, endShell):
         shellList.append(shell)
     return shellList
 
-"""
-shells = createShells('B11005', 1, 19)
-mult = censusdata.download('acs5', 2013, censusdata.censusgeo([('state', '41'), ('county', '051')]), shells)
-la = censusdata.download('acs5', 2013, censusdata.censusgeo([('state', '06'), ('county', '037')]), shells)
-bos = censusdata.download('acs5', 2013, censusdata.censusgeo([('state', '25'), ('county', '025')]), shells)
-dc = censusdata.download('acs5', 2013, censusdata.censusgeo([('state', '11'), ('county', '001')]), shells)
-testData = la.append(dc)
-testData = testData.append(bos)
-testData = testData.append(mult)
-testData.to_csv('raw_household65a.csv')
-"""
+def get_data(fips_dict, table_code, start_shell, end_shell, name):
+    shells = createShells(table_code, start_shell, end_shell)
+    raw_data = pd.DataFrame()
+    for data in fips_dict.values():
+        to_append = censusdata.download('acs5', 2013, censusdata.censusgeo([('state', data['state']), ('county', data['county'])]), shells)
+        raw_data = raw_data.append(to_append)
+    raw_data.to_csv('raw_' + name + '.csv')
+
+def get_single_data(table_code, start_shell, end_shell, name):
+    shells = createShells(table_code, start_shell, end_shell)
+    data = censusdata.download('acs5', 2013, censusdata.censusgeo([('state', '08'), ('county', '041')]), shells)
+    data.to_csv('raw_' + name + '.csv')
+
+def make_fips_dict(filepath):
+    fips_data = pd.read_csv(filepath, dtype={'name':str, 'state':str, 'county':str})
+    fips_dict = fips_data.to_dict('index')
+    return fips_dict
 
 def csvToDict(filepath, name):
     ageData = pd.read_csv(filepath)
@@ -52,7 +58,7 @@ def csvToDict(filepath, name):
     transAgeData = cumAgeData.transpose()
     ageDataDict = transAgeData.to_dict('list')
     ageData_toMerge = collections.defaultdict(dict)
-    for i in range(4):
+    for i in range(74):
         ageData_toMerge[i][name] = ageDataDict[i]
     return ageData_toMerge
 
@@ -61,18 +67,19 @@ def csvToDict_noCumSum(filepath, name):
     transAgeData = ageData.transpose()
     ageDataDict = transAgeData.to_dict('list')
     ageData_toMerge = collections.defaultdict(dict)
-    for i in range(4):
+    for i in range(74):
         ageData_toMerge[i][name] = ageDataDict[i]
     return ageData_toMerge
 
 def mergeDicts():
-    ageData = csvToDict('test_data/pcthouseholdagedist.csv', 'age')
-    u25income = csvToDict('test_data/pctincomeageu25.csv', 'u25income')
-    income2544 = csvToDict('test_data/pctincomeage25to44.csv', 'income2544')
-    income4564 = csvToDict('test_data/pctincomeage45to64.csv', 'income4564')
-    income65a = csvToDict('test_data/pctincomeage65a.csv', 'income65a')
+    ageData = csvToDict('real_data/pcthouseholdagedist.csv', 'age')
+    u25income = csvToDict('real_data/pctincomeu25.csv', 'u25income')
+    income2544 = csvToDict('real_data/pctincome2544.csv', 'income2544')
+    income4564 = csvToDict('real_data/pctincome4564.csv', 'income4564')
+    income65a = csvToDict('real_data/pctincome65a.csv', 'income65a')
     # different method - don't need to cumsum (!)
-    tenure = csvToDict_noCumSum('test_data/ownprobability.csv', 'tenure')
+    tenure = csvToDict_noCumSum('real_data/ownprobability.csv', 'tenure')
+    """
     rent1534 = csvToDict('test_data/household1534rent.csv', 'rent1534')
     own1534 = csvToDict('test_data/household1534own.csv', 'own1534')
     rent3564 = csvToDict('test_data/household3564rent.csv', 'rent3564')
@@ -81,13 +88,34 @@ def mergeDicts():
     own65a = csvToDict('test_data/household65aown.csv', 'own65a')
     # different method - don't need to cumsum (!)
     children = csvToDict_noCumSum('test_data/pcthouseholdu18.csv', 'children')
-    climate = csvToDict_noCumSum('test_data/countychangetest.csv', 'climate')
+    """
+    climate = csvToDict_noCumSum('real_data/countychangemonth.csv', 'climate')
     bigDict = collections.defaultdict(dict)
-    for d in [ageData, u25income, income2544, income4564, income65a, tenure, rent1534, own1534, rent3564, own3564, rent65a, own65a, children, climate]:
+    for d in [ageData, u25income, income2544, income4564, income65a, tenure, climate]: # rent1534, own1534, rent3564, own3564, rent65a, own65a, children, climate]:
         for k, v in d.items():
             bigDict[k].update(v)
     return bigDict
 
-test_data_dict = mergeDicts()
-with open('test_data_dict.pickle', 'wb') as f:
-    pickle.dump(test_data_dict, f, pickle.DEFAULT_PROTOCOL)
+def make_pickle():
+    real_data_dict = mergeDicts()
+    print(real_data_dict)
+    with open('real_data_dict.pickle', 'wb') as f:
+        pickle.dump(real_data_dict, f, pickle.DEFAULT_PROTOCOL)
+
+def get_all_data():
+    fips_dict = make_fips_dict('real_data/county_fips.csv')
+    get_data(fips_dict, 'B25118', 1, 25, 'tenure')
+
+def get_cumulative_population_list():
+    populationData = pd.read_csv('real_data/real_raw_data/raw_totalhousehold.csv')
+    cumPop = populationData.cumsum(axis=0, skipna=True)
+    cumDict = cumPop.to_dict('list')
+    return cumDict['total_pop_1000']
+
+def get_population_list():
+    populationData = pd.read_csv('real_data/real_raw_data/raw_totalhousehold.csv')
+    popDict = populationData.to_dict('list')
+    return popDict['total_pop_1000']
+
+# get_single_data('B19037', 36, 69, 'elpasoco4565a')
+# make_pickle()
