@@ -42,6 +42,11 @@ def get_data(fips_dict, table_code, start_shell, end_shell, name):
         raw_data = raw_data.append(to_append)
     raw_data.to_csv('raw_' + name + '.csv')
 
+def get_single_data(table_code, start_shell, end_shell, name):
+    shells = createShells(table_code, start_shell, end_shell)
+    data = censusdata.download('acs5', 2013, censusdata.censusgeo([('state', '08'), ('county', '041')]), shells)
+    data.to_csv('raw_' + name + '.csv')
+
 def make_fips_dict(filepath):
     fips_data = pd.read_csv(filepath, dtype={'name':str, 'state':str, 'county':str})
     fips_dict = fips_data.to_dict('index')
@@ -53,7 +58,7 @@ def csvToDict(filepath, name):
     transAgeData = cumAgeData.transpose()
     ageDataDict = transAgeData.to_dict('list')
     ageData_toMerge = collections.defaultdict(dict)
-    for i in range(73):
+    for i in range(74):
         ageData_toMerge[i][name] = ageDataDict[i]
     return ageData_toMerge
 
@@ -62,7 +67,7 @@ def csvToDict_noCumSum(filepath, name):
     transAgeData = ageData.transpose()
     ageDataDict = transAgeData.to_dict('list')
     ageData_toMerge = collections.defaultdict(dict)
-    for i in range(73):
+    for i in range(74):
         ageData_toMerge[i][name] = ageDataDict[i]
     return ageData_toMerge
 
@@ -111,3 +116,6 @@ def get_population_list():
     populationData = pd.read_csv('real_data/real_raw_data/raw_totalhousehold.csv')
     popDict = populationData.to_dict('list')
     return popDict['total_pop_1000']
+
+# get_single_data('B19037', 36, 69, 'elpasoco4565a')
+make_pickle()

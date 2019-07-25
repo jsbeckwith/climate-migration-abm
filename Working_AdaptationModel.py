@@ -332,7 +332,7 @@ def createGraph():
     with open('real_data_dict.pickle', 'rb') as f:
         node_data = pickle.load(f)
 
-    G = nx.complete_graph(73)
+    G = nx.complete_graph(74)
     nx.set_node_attributes(G, node_data)
     # need to figure out a better way to do this eventually
     # nx.set_edge_attributes(G, {(0, 1): 2294, (0, 2): 2591, (0, 3): 826, (1, 2): 394, (1, 3): 2347, (2, 3): 2532}, 'distance')

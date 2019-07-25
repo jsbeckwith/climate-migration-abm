@@ -3,7 +3,7 @@ import sys
 import numpy as np
 
 steps = 5 # number of time steps to run model
-num_counties = 73
+num_counties = 74
 
 def runClimateMigrationModel():
 
