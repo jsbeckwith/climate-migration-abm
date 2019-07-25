@@ -23,6 +23,7 @@ def runClimateMigrationModel():
         model.step()
     
     model_attributes = model.datacollector.get_model_vars_dataframe()  # store model level state variables in dataframe
-    model_attributes.to_csv('output.csv')
+    model_attributes.to_csv('output_distance.csv')
+    model_attributes['County Population'].to_csv('output_distance_pop.csv')
 
 runClimateMigrationModel()

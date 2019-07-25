@@ -306,14 +306,14 @@ class Household(Agent):
             to_choose = []
             to_move = None
             radius = (self.income + 1) * 300
-            """
+
             for i in range(self.model.num_nodes):
                 if self.pos != i:
                     distance = self.model.G.get_edge_data(self.pos, i)['distance']
                     if distance < radius:
                         for j in range(3000//distance):
                             to_choose.append(i)
-            """
+
             self.rank_counties_by_network()
 
             for i in range(len(self.counties_by_network)):
@@ -326,15 +326,14 @@ class Household(Agent):
                 self.model.grid.move_agent(self, to_move)
 
 def createGraph():
-    # create a perfectly connected graph of all counties (k^78)
-    # G_counties = nx.complete_graph(78)
-    
-    with open('real_data_dict.pickle', 'rb') as f:
-        node_data = pickle.load(f)
+    with open('real_data_dict.pickle', 'rb') as node_data_file:
+        node_data = pickle.load(node_data_file)
+
+    with open('distance_dict.pickle', 'rb') as edge_data_file:
+        edge_data = pickle.load(edge_data_file)
 
     G = nx.complete_graph(74)
     nx.set_node_attributes(G, node_data)
-    # need to figure out a better way to do this eventually
-    # nx.set_edge_attributes(G, {(0, 1): 2294, (0, 2): 2591, (0, 3): 826, (1, 2): 394, (1, 3): 2347, (2, 3): 2532}, 'distance')
-
+    nx.set_edge_attributes(G, edge_data, 'distance')
+    
     return G
