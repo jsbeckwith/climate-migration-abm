@@ -1,4 +1,3 @@
-from census_data import *
 from mesa import Agent, Model
 from mesa.time import SimultaneousActivation
 from mesa.space import NetworkGrid
@@ -7,9 +6,10 @@ from statistics import mean
 
 import random
 import math
+import pickle
 import networkx as nx
-import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 
 # ACCESS NODE OF AGENT BY USING .pos
 # ACCESS AGENTS IN NODE BY USING G.node[n]['agent']
@@ -31,21 +31,20 @@ class ClimateMigrationModel(Model):
         self.grid = NetworkGrid(self.G)
         self.county_climate_ranking = []
         self.county_population_list = [0] * self.num_nodes
-        self.county_migration_rates = [0] * self.num_nodes
-        self.cum_county_migration_rates = [0] * self.num_nodes
+        self.county_influx = [0] * self.num_nodes
         self.deaths = []
         self.births = []
         self.datacollector = DataCollector(model_reporters={   
                                 "County Population": lambda m1: list(m1.county_population_list), 
-                                "County Migration Rates": lambda m2: m2.county_migration_rates,
+                                "County Influx": lambda m2: m2.county_influx,
                                 "Deaths": lambda m3: m3.deaths, "Births": lambda m4: m4.births, 
                                 "Total Population": lambda m5: m5.num_agents})
 
     def addAgents(self):
         cumulative_population_list = get_cumulative_population_list()
         self.county_population_list = get_population_list()
-        self.num_agents = cumulative_population_list[72]
-        self.agent_index = cumulative_population_list[72]
+        self.num_agents = cumulative_population_list[73]
+        self.agent_index = cumulative_population_list[73]
 
         m = 0
         i = 0
@@ -131,15 +130,6 @@ class ClimateMigrationModel(Model):
         heat_dry_data = np.array(heat_dry_data)
         county_climate_rank = np.argsort(heat_dry_data)
         self.county_climate_ranking = list(county_climate_rank)
-
-    def calculateMigrationRates(self):
-        self.county_migration_rates = [0]*self.num_nodes
-        for n in self.nodes:
-            for a in self.G.node[n]['agent']:
-                if a.originalPos != n:
-                    self.cum_county_migration_rates[n] += 1
-                    self.county_migration_rates[n] += 1
-                    # could eventually factor in edges to get a better picture of Where ?
     
     def step(self):
         global tick
@@ -147,7 +137,6 @@ class ClimateMigrationModel(Model):
         self.updateCountyPopulation()
         self.updateClimate()
         self.rank_by_climate()
-        self.calculateMigrationRates()
         self.datacollector.collect(self)  
         tick += 1
 
@@ -197,29 +186,29 @@ class Household(Agent):
             income_list = self.model.G.node[self.pos]['income65a']
         
         if rand_num < income_list[0]:
-            self.income = 0
-        elif rand_num < income_list[1]:
             self.income = 1
-        elif rand_num < income_list[2]:
+        elif rand_num < income_list[1]:
             self.income = 2
-        elif rand_num < income_list[3]:
+        elif rand_num < income_list[2]:
             self.income = 3
-        elif rand_num < income_list[4]:
+        elif rand_num < income_list[3]:
             self.income = 4
-        elif rand_num < income_list[5]:
+        elif rand_num < income_list[4]:
             self.income = 5
-        elif rand_num < income_list[6]:
+        elif rand_num < income_list[5]:
             self.income = 6
-        elif rand_num < income_list[7]:
+        elif rand_num < income_list[6]:
             self.income = 7
-        elif rand_num < income_list[8]:
+        elif rand_num < income_list[7]:
             self.income = 8
-        else:
+        elif rand_num < income_list[8]:
             self.income = 9
+        else:
+            self.income = 10
 
     def initialize_tenure(self, rand_num):
         tenure_list = self.model.G.node[self.pos]['tenure']
-        if rand_num > tenure_list[self.income]:
+        if rand_num > tenure_list[self.income-1]:
             self.tenure = 1
     
     def initialize_household(self, rand_num):
@@ -276,6 +265,7 @@ class Household(Agent):
             self.counties_by_network[n] += 1
 
     def calculateMigrationProbability(self):
+        # data from census report 2005-2010
         if self.age < 25:
             self.probability[0] += 0.179
         elif self.age < 29:
@@ -300,15 +290,20 @@ class Household(Agent):
     def calculate_adaptive_capacity(self):
         # how might it change with age, household type?
         self.adaptive_capacity = self.income/10
+        if self.age > 65:
+            self.adaptive_capacity -= self.age/600
+        # if children, decrease adaptive capacity
+        # if alone, increase
 
     def make_decision(self):
         if random.random() < mean(self.probability):
+            
             to_choose = []
             to_move = None
-            radius = (self.income + 1) * 300
+            radius = (self.adaptive_capacity) * 3000
 
             for i in range(self.model.num_nodes):
-                if self.pos != i:
+                if i != self.pos:
                     distance = self.model.G.get_edge_data(self.pos, i)['distance']
                     if distance < radius:
                         for j in range(3000//distance):
@@ -317,12 +312,14 @@ class Household(Agent):
             self.rank_counties_by_network()
 
             for i in range(len(self.counties_by_network)):
-                if self.pos != i:
-                    for j in range(self.counties_by_network[i]//2):
+                if i != self.pos:
+                    for j in range(self.counties_by_network[i]):
                         to_choose.append(i)
             
             if to_choose:
                 to_move = random.choice(to_choose)
+                self.model.county_influx[self.pos] -= 1
+                self.model.county_influx[to_move] += 1
                 self.model.grid.move_agent(self, to_move)
 
 def createGraph():
@@ -335,5 +332,15 @@ def createGraph():
     G = nx.complete_graph(74)
     nx.set_node_attributes(G, node_data)
     nx.set_edge_attributes(G, edge_data, 'distance')
-    
     return G
+
+def get_population_list():
+    populationData = pd.read_csv('real_data/real_raw_data/raw_totalhousehold.csv')
+    popDict = populationData.to_dict('list')
+    return popDict['total_pop_100']
+
+def get_cumulative_population_list():
+    populationData = pd.read_csv('real_data/real_raw_data/raw_totalhousehold.csv')
+    cumPop = populationData.cumsum(axis=0, skipna=True)
+    cumDict = cumPop.to_dict('list')
+    return cumDict['total_pop_100']
