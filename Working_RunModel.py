@@ -14,7 +14,7 @@ def runClimateMigrationModel():
     print('added agents')
     model.initialize_networks()
     print('set networks')
-    # model.calculateCurrentClimate()
+    model.calculateCurrentClimate()
     print('initial climate data')
     model.datacollector.collect(model)  # collect initial model state variables
     # note - can store model configuration using 'pickle' for repeated runs
@@ -23,7 +23,8 @@ def runClimateMigrationModel():
         model.step()
     
     model_attributes = model.datacollector.get_model_vars_dataframe()  # store model level state variables in dataframe
-    model_attributes.to_csv('output_distance.csv')
-    model_attributes['County Population'].to_csv('output_distance_pop.csv')
+    model_attributes.to_csv('output/729_2.csv')
+    model_attributes['County Influx'].to_csv('output/729_2_mig.csv')
+    model_attributes['County Population'].to_csv('output/729_2_pop.csv')
 
 runClimateMigrationModel()
