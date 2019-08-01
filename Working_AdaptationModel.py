@@ -5,6 +5,7 @@ from mesa.datacollection import DataCollector
 from statistics import mean
 from multiprocessing import Pool
 from multiprocessing.dummy import Pool as ThreadPool
+from multiprocessing import Process
 
 import random
 import math
@@ -64,15 +65,15 @@ class ClimateMigrationModel(Model):
                 m += 1
 
     def initialize_networks(self):
-        pool = ThreadPool()
+        """
+        pool = Pool()
         pool.map(Household.initialize_network, self.schedule.agents)
         pool.close()
         pool.join()
         """
         for a in self.schedule.agents:
-            a.connections = random.sample(self.G.node[a.pos]['agent'], 2)
-            a.connections += random.sample(self.schedule.agents, random.randint(1, 2))
-        """
+            a.connections = random.sample(self.G.node[a.pos]['agent'], 3)
+            a.connections += random.sample(self.schedule.agents, random.randint(1, 3))
 
     def updateCountyPopulation(self):
         self.deaths = [0]*self.num_nodes
@@ -141,10 +142,10 @@ class ClimateMigrationModel(Model):
     
     def step(self):
         global tick
+        self.rank_by_climate()
         self.schedule.step() 
         self.updateCountyPopulation()
         self.updateClimate()
-        self.rank_by_climate()
         self.datacollector.collect(self)  
         tick += 1
 
@@ -259,7 +260,7 @@ class Household(Agent):
         self.calculateMigrationProbability()
 
     def advance(self):
-        self.make_decision()
+        self.make_climate_decision()
 
     def updateAge(self):
         self.age += 1
@@ -329,6 +330,46 @@ class Household(Agent):
                 self.model.county_influx[self.pos] -= 1
                 self.model.county_influx[to_move] += 1
                 self.model.grid.move_agent(self, to_move)
+    
+    def make_climate_decision(self):
+        if random.random() < mean(self.probability):
+            to_choose = []
+            to_move = None
+            radius = (self.adaptive_capacity) * 3000
+
+            for i in range(self.model.num_nodes):
+                if i != self.pos:
+                    distance = self.model.G.get_edge_data(self.pos, i)['distance']
+                    if distance < radius:
+                        for j in range(3000//distance):
+                            to_choose.append(i)
+            
+            self.rank_counties_by_network()
+
+            for i in range(len(self.counties_by_network)):
+                if i != self.pos:
+                    for j in range(self.counties_by_network[i]):
+                        to_choose.append(i)
+            
+            # need threshold - otherwise everyone will leave
+
+            current_county_climate_rank = self.model.county_climate_ranking.index(self.pos)
+            if current_county_climate_rank > 50:
+                for i in range(current_county_climate_rank):
+                    if self.model.county_climate_ranking[i] in to_choose:
+                        to_choose.append(i)
+                
+                for i in range(current_county_climate_rank, self.model.num_nodes):
+                    county = self.model.county_climate_ranking[i]
+                    if county in to_choose:
+                        to_choose.remove(county)
+                
+            if to_choose:
+                to_move = random.choice(to_choose)
+                self.model.county_influx[self.pos] -= 1
+                self.model.county_influx[to_move] += 1
+                self.model.grid.move_agent(self, to_move)
+
 
 def createGraph():
     with open('real_data_dict.pickle', 'rb') as node_data_file:
