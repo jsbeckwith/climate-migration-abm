@@ -72,6 +72,7 @@ class ClimateMigrationModel(Model):
         pool.join()
         """
         for a in self.schedule.agents:
+            print(a.unique_id)
             a.connections = random.sample(self.G.node[a.pos]['agent'], 3)
             a.connections += random.sample(self.schedule.agents, random.randint(1, 3))
 
@@ -386,10 +387,10 @@ def createGraph():
 def get_population_list():
     populationData = pd.read_csv('real_data/real_raw_data/raw_totalhousehold.csv')
     popDict = populationData.to_dict('list')
-    return popDict['total_pop_1000']
+    return popDict['total_pop_100']
 
 def get_cumulative_population_list():
     populationData = pd.read_csv('real_data/real_raw_data/raw_totalhousehold.csv')
     cumPop = populationData.cumsum(axis=0, skipna=True)
     cumDict = cumPop.to_dict('list')
-    return cumDict['total_pop_1000']
+    return cumDict['total_pop_100']

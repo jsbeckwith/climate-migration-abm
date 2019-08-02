@@ -33,9 +33,9 @@ def runClimateMigrationModel(collect_data):
 
     if collect_data:
         model_attributes = model.datacollector.get_model_vars_dataframe()  # store model level state variables in dataframe
-        model_attributes.to_csv('output/731_1000_47_climatewth.csv')
-        model_attributes['County Influx'].to_csv('output/731_1000_flux_47_climatewth.csv')
-        model_attributes['County Population'].to_csv('output/731_1000_pop_47_climatewth.csv')
+        model_attributes.to_csv('output/81_100_47_climatewth.csv')
+        model_attributes['County Influx'].to_csv('output/81_100_flux_47_climatewth.csv')
+        model_attributes['County Population'].to_csv('output/81_100_pop_47_climatewth.csv')
 
     print('elapsed time (s):', five_steps - start)
 
