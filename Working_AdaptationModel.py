@@ -32,8 +32,9 @@ class ClimateMigrationModel(Model):
         self.county_influx = [0] * self.num_counties
         self.deaths = []
         self.births = []
+        self.county_income = {}
         self.datacollector = DataCollector(model_reporters={"County Population": lambda m1: list(m1.county_population_list),
-                                                            "County Influx": lambda m2: m2.county_influx,
+                                                            "County Influx": lambda m2: list(m2.county_influx),
                                                             "Deaths": lambda m3: m3.deaths,
                                                             "Births": lambda m4: m4.births,
                                                             "Total Population": lambda m5: m5.num_agents})
@@ -131,6 +132,13 @@ class ClimateMigrationModel(Model):
         county_climate_rank = np.argsort(heat_dry_data)
         self.county_climate_ranking = list(county_climate_rank)
 
+    def update_income_counts(self):
+        for i in range(self.num_counties):
+            self.county_income[i] = [0]*10
+        for a in self.schedule.agents:
+            self.county_income[a.pos][a.income-1] += 1
+        print(self.county_income)
+
     def step(self):
         global TICK
         self.rank_by_climate()
@@ -158,8 +166,8 @@ class Household(Agent):
 
     def initialize_agent(self):
         self.initialize_age(random.random())
-        self.update_income(random.random())
-        self.update_tenure(random.random())
+        self.initialize_income(random.random())
+        self.initialize_tenure(random.random())
         # self.initialize_household(random.random())
         # if self.household != 3:
             # self.initialize_children(random.random())
@@ -175,7 +183,7 @@ class Household(Agent):
         else:
             self.age = random.randint(65, 80)
 
-    def update_income(self, rand_num):
+    def initialize_income(self, rand_num):
         if self.age < 25:
             income_list = self.model.G.node[self.pos]['u25income']
         elif self.age < 45:
@@ -206,7 +214,7 @@ class Household(Agent):
         else:
             self.income = 10
 
-    def update_tenure(self, rand_num):
+    def initialize_tenure(self, rand_num):
         tenure_list = self.model.G.node[self.pos]['tenure']
         if rand_num > tenure_list[self.income-1]:
             self.tenure = 1
@@ -246,18 +254,23 @@ class Household(Agent):
         self.connections = random.sample(self.model.G.node[self.pos]['agent'], 3)
         self.connections += random.sample(self.model.schedule.agents, random.randint(1, 3))
 
-    def step(self):
-        self.update_age()
-        if self.age == 26 or self.age == 46 or self.age == 66:
-            self.update_income(random.random())
-            self.update_tenure(random.random())
-        self.calculate_migration_probability()
-
-    def advance(self):
-        self.make_climate_decision()
-
     def update_age(self):
         self.age += 1
+
+    def update_income_tenure(self):
+        if self.age == 26:
+            if self.income < 3:
+                self.income += random.randint(0, 6)
+            if self.income * 0.0715 > random.random():
+                self.tenure = 0
+        elif self.age == 46:
+            if self.income > 7:
+                self.income += random.randint(0, 2)
+                if self.income * 0.0715 > random.random():
+                    self.tenure = 0
+        elif self.age == 66:
+            if self.income > 7:
+                self.income += random.randint(-2, 0)
 
     def rank_counties_by_network(self):
         connected_locations = []
@@ -372,6 +385,13 @@ class Household(Agent):
                     self.model.G[to_move][self.pos]['net_mig'] -= 1
                 self.model.grid.move_agent(self, to_move)
 
+    def step(self):
+        self.update_age()
+        self.update_income_tenure()
+        self.calculate_migration_probability()
+
+    def advance(self):
+        self.make_climate_decision()
 
 def create_graph():
     with open('real_data_dict.pickle', 'rb') as node_data_file:

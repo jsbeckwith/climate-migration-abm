@@ -3,7 +3,7 @@ import sys
 import numpy as np
 import time
 
-steps = 47 # number of time steps to run model
+steps = 5 # number of time steps to run model
 num_counties = 74
 
 def runClimateMigrationModel(collect_data, filename):
@@ -21,13 +21,15 @@ def runClimateMigrationModel(collect_data, filename):
 
     model.datacollector.collect(model)  # collect initial model state variables
     step1 = model_creation
+    model.update_income_counts()
     for i in range(steps):
         print('step', i)
         model.step()
         step2 = time.time()
         print(step2 - step1)
         step1 = step2
-    
+    model.update_income_counts()
+
     five_steps = time.time()
 
     print(model.G.edges(data=True)) # figure out how to export
@@ -39,4 +41,4 @@ def runClimateMigrationModel(collect_data, filename):
 
     print('elapsed time (s):', five_steps - start)
 
-runClimateMigrationModel(True, '0808_heat75_dry200')
+runClimateMigrationModel(False, '0808_heat75_dry200')
