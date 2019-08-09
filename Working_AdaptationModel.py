@@ -345,9 +345,11 @@ class Household(Agent):
                         to_choose.append(i)
             
             # need threshold - otherwise everyone will leave
-
+            heat = self.model.G.node[self.pos]['climate'][1]
+            dry = self.model.G.node[self.pos]['climate'][7]
             current_county_climate_rank = self.model.county_climate_ranking.index(self.pos)
-            if current_county_climate_rank > 50:
+            # if current_county_climate_rank > 50:
+            if heat > 75 and dry > 200:
                 for i in range(current_county_climate_rank):
                     if self.model.county_climate_ranking[i] in to_choose:
                         to_choose.append(i)
@@ -361,6 +363,11 @@ class Household(Agent):
                 to_move = random.choice(to_choose)
                 self.model.county_influx[self.pos] -= 1
                 self.model.county_influx[to_move] += 1
+                # track migration between counties
+                if self.pos > to_move:
+                    self.model.G[self.pos][to_move]['net_mig'] += 1
+                else:
+                    self.model.G[to_move][self.pos]['net_mig'] -= 1
                 self.model.grid.move_agent(self, to_move)
 
 
@@ -371,9 +378,14 @@ def createGraph():
     with open('distance_dict.pickle', 'rb') as edge_data_file:
         edge_data = pickle.load(edge_data_file)
 
+    with open('migration_pair_dict.pickle', 'rb') as mig_data_file:
+        migration_edge_data = pickle.load(mig_data_file)
+    
     G = nx.complete_graph(74)
     nx.set_node_attributes(G, node_data)
     nx.set_edge_attributes(G, edge_data, 'distance')
+    nx.set_edge_attributes(G, migration_edge_data, 'net_mig')
+    
     return G
 
 def get_population_list():

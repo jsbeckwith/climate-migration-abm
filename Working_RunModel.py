@@ -6,7 +6,7 @@ import time
 steps = 47 # number of time steps to run model
 num_counties = 74
 
-def runClimateMigrationModel(collect_data):
+def runClimateMigrationModel(collect_data, filename):
     start = time.time()
     # initialize model
     model = ClimateMigrationModel(num_counties, 0)
@@ -20,7 +20,6 @@ def runClimateMigrationModel(collect_data):
     print(model_creation - start)
 
     model.datacollector.collect(model)  # collect initial model state variables
-    # note - can store model configuration using 'pickle' for repeated runs
     step1 = model_creation
     for i in range(steps):
         print('step', i)
@@ -31,12 +30,13 @@ def runClimateMigrationModel(collect_data):
     
     five_steps = time.time()
 
+    print(model.G.edges(data=True)) # figure out how to export
     if collect_data:
         model_attributes = model.datacollector.get_model_vars_dataframe()  # store model level state variables in dataframe
-        model_attributes.to_csv('output/86_1000_47_updatedclimate.csv')
-        model_attributes['County Influx'].to_csv('output/86_1000_flux_47_updatedclimate.csv')
-        model_attributes['County Population'].to_csv('output/86_1000_pop_47_updatedclimate.csv')
+        model_attributes.to_csv('output/' + filename + '.csv')
+        model_attributes['County Influx'].to_csv('output/'+ filename + '_flux.csv')
+        model_attributes['County Population'].to_csv('output/' + filename + '_pop.csv')
 
     print('elapsed time (s):', five_steps - start)
 
-runClimateMigrationModel(True)
+runClimateMigrationModel(True, '0808_heat75_dry200')
