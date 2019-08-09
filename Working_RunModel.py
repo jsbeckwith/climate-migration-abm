@@ -11,7 +11,7 @@ def runClimateMigrationModel(collect_data, filename):
     # initialize model
     model = ClimateMigrationModel(num_counties, 0)
     print('created model obj')
-    model.addAgents()
+    model.add_agents()
     print('added agents')
     print(model.num_agents)
     model.initialize_networks()

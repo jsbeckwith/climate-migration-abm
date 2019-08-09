@@ -44,5 +44,3 @@ def create_edge_migration():
     
     with open('migration_pair_dict.pickle', 'wb') as f:
         pickle.dump(migration_dict, f, pickle.DEFAULT_PROTOCOL)
-
-create_distance_dict()
