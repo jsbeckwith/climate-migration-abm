@@ -63,7 +63,6 @@ class ClimateMigrationModel(Model):
 
     def initialize_networks(self):
         for a in self.schedule.agents:
-            print(a.unique_id)
             a.connections = random.sample(self.G.node[a.pos]['agent'], 3)
             a.connections += random.sample(self.schedule.agents, random.randint(1, 3))
 
@@ -260,17 +259,17 @@ class Household(Agent):
     def update_income_tenure(self):
         if self.age == 26:
             if self.income < 3:
-                self.income += random.randint(0, 6)
+                self.income += random.randint(-1, 6)
             if self.income * 0.0715 > random.random():
                 self.tenure = 0
         elif self.age == 46:
-            if self.income > 7:
-                self.income += random.randint(0, 2)
+            if self.income == 7:
+                self.income += random.randint(-1, 2)
                 if self.income * 0.0715 > random.random():
                     self.tenure = 0
         elif self.age == 66:
             if self.income > 7:
-                self.income += random.randint(-2, 0)
+                self.income -= random.randint(0, 2)
 
     def rank_counties_by_network(self):
         connected_locations = []
