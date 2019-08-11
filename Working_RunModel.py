@@ -3,10 +3,10 @@ import sys
 import numpy as np
 import time
 
-steps = 47 # number of time steps to run model
+steps = 5 # number of time steps to run model
 num_counties = 74
 
-sys.stdout = open('output.txt', 'wt')
+sys.stdout = open('output47_climate_fix.txt', 'wt')
 
 def runClimateMigrationModel(collect_data, filename):
     start = time.time()
@@ -16,7 +16,7 @@ def runClimateMigrationModel(collect_data, filename):
     model.add_agents()
     print('added agents')
     print(model.num_agents)
-    model.initialize_networks()
+    model.initialize_income_networks()
     print('set networks')
     model_creation = time.time()
     print(model_creation - start)
@@ -43,4 +43,4 @@ def runClimateMigrationModel(collect_data, filename):
 
     print('elapsed time (s):', five_steps - start)
 
-runClimateMigrationModel(True, '0809_heat75_and_dry200')
+runClimateMigrationModel(False, '0810_heat75_and_dry200')
