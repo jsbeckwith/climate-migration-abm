@@ -89,7 +89,7 @@ def mergeDicts():
     # different method - don't need to cumsum (!)
     children = csvToDict_noCumSum('test_data/pcthouseholdu18.csv', 'children')
     """
-    climate = csvToDict_noCumSum('countychangemonth.csv', 'climate')
+    climate = csvToDict_noCumSum('climate_slr.csv', 'climate')
     bigDict = collections.defaultdict(dict)
     for d in [ageData, u25income, income2544, income4564, income65a, tenure, climate]: # rent1534, own1534, rent3564, own3564, rent65a, own65a, children, climate]:
         for k, v in d.items():
@@ -97,10 +97,10 @@ def mergeDicts():
     return bigDict
 
 def make_pickle():
-    real_data_dict = mergeDicts()
-    print(real_data_dict)
-    with open('real_data_dict.pickle', 'wb') as f:
-        pickle.dump(real_data_dict, f, pickle.DEFAULT_PROTOCOL)
+    real_data_dict_slr_house = mergeDicts()
+    print(real_data_dict_slr_house)
+    with open('real_data_dict_slr_house.pickle', 'wb') as f:
+        pickle.dump(real_data_dict_slr_house, f, pickle.DEFAULT_PROTOCOL)
 
 def get_all_data():
     fips_dict = make_fips_dict('real_data/county_fips.csv')

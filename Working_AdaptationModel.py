@@ -63,21 +63,17 @@ class ClimateMigrationModel(Model):
         self.num_agents = cumulative_population_list[self.num_counties-1]
         self.agent_index = cumulative_population_list[self.num_counties-1]
 
-    def initialize_networks(self):
+    def initialize_all_networks(self):
         for a in self.schedule.agents:
-            a.connections = random.sample(self.G.node[a.pos]['agent'], self.upper_network_size)
-            a.connections += random.sample(self.schedule.agents, random.randint(1, self.upper_network_size))
+            a.initialize_network()
 
-    def initialize_income_networks(self):
+    def initialize_all_income_networks(self):
         for a in self.schedule.agents:
-            while len(a.connections) < self.upper_network_size:
-                potential_connection = random.choice(self.G.node[a.pos]['agent'])
-                if potential_connection.income == a.income or potential_connection.income == a.income + 1 or potential_connection.income == a.income - 1:
-                    a.connections.append(potential_connection)
-            while len(a.connections) < self.upper_network_size + random.randint(1, self.upper_network_size):
-                potential_connection = random.choice(self.schedule.agents)
-                if potential_connection.income == a.income or potential_connection.income == a.income + 1 or potential_connection.income == a.income - 1:
-                    a.connections.append(potential_connection)
+            a.initialize_income_network()
+
+    def initialize_all_families(self):
+        for a in self.schedule.agents:
+            a.initialize_family()
 
     def update_population(self):
         self.deaths = [0]*self.num_counties
@@ -226,10 +222,57 @@ class Household(Agent):
         if rand_num > tenure_list[self.income-1]:
             self.tenure = 1
 
-    def initialize_network(self):
+    def initialize_network(self): # initialize age-based network? and then combine for income/age network?
         upper_bound = self.model.upper_network_size
         self.connections = random.sample(self.model.G.node[self.pos]['agent'], upper_bound)
         self.connections += random.sample(self.model.schedule.agents, random.randint(1, upper_bound))
+
+    def initialize_income_network(self):
+        upper_bound = self.model.upper_network_size
+        while len(self.connections) < upper_bound:
+            potential_connection = random.choice(self.model.G.node[self.pos]['agent'])
+            if abs(potential_connection.income - self.income) <= 1:
+                self.connections.append(potential_connection)
+        while len(self.connections) < upper_bound + random.randint(1, upper_bound):
+            potential_connection = random.choice(self.model.schedule.agents)
+            if abs(potential_connection.income - self.income) <= 1:
+                self.connections.append(potential_connection)
+
+    def initialize_age_network(self):
+        upper_bound = self.model.upper_network_size
+        while len(self.connections) < upper_bound:
+            potential_connection = random.choice(self.model.G.node[self.pos]['agent'])
+            if abs(potential_connection.age - self.age) <= 5:
+                self.connections.append(potential_connection)
+        while len(self.connections) < upper_bound + random.randint(1, upper_bound):
+            potential_connection = random.choice(self.model.schedule.agents)
+            if abs(potential_connection.age - self.age) <= 5:
+                self.connections.append(potential_connection)
+
+    def initialize_income_age_network(self):
+        upper_bound = self.model.upper_network_size
+        while len(self.connections) < upper_bound:
+            potential_connection = random.choice(self.model.G.node[self.pos]['agent'])
+            if abs(potential_connection.age - self.age) <= 5:
+                if abs(potential_connection.income - self.income) <= 1:
+                    self.connections.append(potential_connection)
+        while len(self.connections) < upper_bound + random.randint(1, upper_bound):
+            potential_connection = random.choice(self.model.schedule.agents)
+            if abs(potential_connection.age - self.age) <= 5:
+                if abs(potential_connection.income - self.income) <= 1:
+                    self.connections.append(potential_connection)
+ 
+    def initialize_family(self):
+        while not self.family:
+            if self.income < 8:
+                potential_family = random.choice(self.model.G.node[self.pos]['agent'])
+                differential = random.randint(17, 23)
+            else:
+                potential_family = random.choice(self.model.schedule.agents)
+                differential = random.randint(20, 26)
+            if abs(self.age - potential_family.age) > differential:
+                self.family.append(potential_family)
+                potential_family.family.append(self)
 
     def update_age(self):
         self.age += 1
@@ -248,6 +291,39 @@ class Household(Agent):
         elif self.age == 66:
             if self.income > 7:
                 self.income -= random.randint(0, 2)
+
+    def update_network(self): # update by income
+        if len(self.connections) < self.model.upper_network_size*2:
+            if random.random() < 0.5:
+                self.connections += random.choice(self.model.G.node[self.pos]['agent'])
+
+    def update_income_network(self):
+        current_network_size = len(self.connections)
+        if current_network_size < self.model.upper_network_size*2:
+            if random.random() < 0.5:
+                while len(self.connections) < current_network_size+1:
+                    potential_connection = random.choice(self.model.G.node[self.pos]['agent'])
+                    if abs(potential_connection.income - self.income) <= 1:
+                        self.connections.append(potential_connection)
+    
+    def update_age_network(self):
+        current_network_size = len(self.connections)
+        if current_network_size < self.model.upper_network_size*2:
+            if random.random() < 0.5:
+                while len(self.connections) < current_network_size+1:
+                    potential_connection = random.choice(self.model.G.node[self.pos]['agent'])
+                    if abs(potential_connection.age - self.age) <= 5:
+                        self.connections.append(potential_connection)
+
+    def update_age_income_network(self):
+        current_network_size = len(self.connections)
+        if current_network_size < self.model.upper_network_size*2:
+            if random.random() < 0.5:
+                while len(self.connections) < current_network_size+1:
+                    potential_connection = random.choice(self.model.G.node[self.pos]['agent'])
+                    if abs(potential_connection.age - self.age) <= 5:
+                        if abs(potential_connection.income - self.income) <= 1:
+                            self.connections.append(potential_connection)
 
     def rank_counties_by_network(self):
         connected_locations = []
@@ -346,6 +422,8 @@ class Household(Agent):
                     county = self.model.county_climate_ranking[i]
                     if county in to_choose:
                         to_choose.append(county)
+                        for j in range(3//(i+1)): # weighted component
+                            to_choose.append(county)
 
                 for i in range(current_county_climate_rank, self.model.num_counties):
                     county = self.model.county_climate_ranking[i]
@@ -366,6 +444,7 @@ class Household(Agent):
     def step(self):
         self.update_age()
         self.update_income_tenure()
+        self.update_network()
         self.calculate_migration_probability()
 
     def advance(self):
