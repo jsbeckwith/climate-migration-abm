@@ -8,16 +8,23 @@ num_counties = 74
 
 # sys.stdout = open('output47_climate_fix.txt', 'wt')
 
-def runClimateMigrationModel(collect_data, filename):
+def runClimateMigrationModel(collect_data, filename, network_type):
     start = time.time()
     # initialize model
-    model = ClimateMigrationModel(num_counties, 0)
+    model = ClimateMigrationModel(num_counties, 0, network_type=network_type)
     print('created model obj')
     model.add_agents()
     print('added agents')
     print(model.num_agents)
-    model.initialize_all_income_networks()
-    print('set networks')
+    if network_type == 'income':
+        model.initialize_all_income_networks()
+    elif network_type == 'age':
+        model.initialize_all_age_networks()
+    elif network_type == 'income_age':
+        model.initialize_all_income_age_networks()
+    else:
+        model.initialize_all_networks()
+    print('set ', network_type, ' networks')
     model.initialize_all_families()
     print('set family')
     model_creation = time.time()
@@ -45,4 +52,4 @@ def runClimateMigrationModel(collect_data, filename):
 
     print('elapsed time (s):', five_steps - start)
 
-runClimateMigrationModel(False, '0810_heat75_and_dry200')
+runClimateMigrationModel(False, '0810_heat75_and_dry200', 'random')

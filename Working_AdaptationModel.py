@@ -79,6 +79,14 @@ class ClimateMigrationModel(Model):
         for a in self.schedule.agents:
             a.initialize_income_network()
 
+    def initialize_all_age_networks(self):
+        for a in self.schedule.agents:
+            a.initialize_age_network()
+    
+    def initialize_all_income_age_networks(self):
+        for a in self.schedule.agents:
+            a.initialize_income_age_network()
+
     def initialize_all_families(self):
         for a in self.schedule.agents:
             a.initialize_family()
@@ -112,6 +120,7 @@ class ClimateMigrationModel(Model):
                 a.age = 18
                 a.initialize_agent()
                 a.initialize_network()
+                a.initialize_family()
 
                 self.births[a.pos] += 1
 
@@ -234,10 +243,17 @@ class Household(Agent):
     def initialize_preference(self):
         self.preference = random.randint(1, 5)
 
-    def initialize_network(self): # initialize age-based network? and then combine for income/age network?
-        upper_bound = self.model.upper_network_size
-        self.connections = random.sample(self.model.G.node[self.pos]['agent'], upper_bound)
-        self.connections += random.sample(self.model.schedule.agents, random.randint(1, upper_bound))
+    def initialize_network(self):
+        if self.model.network_type == 'income':
+            self.initialize_income_network()
+        elif self.model.network_type == 'age':
+            self.initialize_age_network()
+        elif self.model.network_type == 'income_age':
+            self.initialize_income_age_network()
+        else:
+            upper_bound = self.model.upper_network_size
+            self.connections = random.sample(self.model.G.node[self.pos]['agent'], upper_bound)
+            self.connections += random.sample(self.model.schedule.agents, random.randint(1, upper_bound))
 
     def initialize_income_network(self):
         upper_bound = self.model.upper_network_size
@@ -304,10 +320,17 @@ class Household(Agent):
             if self.income > 7:
                 self.income -= random.randint(0, 2)
 
-    def update_network(self): # update by income
-        if len(self.connections) < self.model.upper_network_size*2:
-            if random.random() < 0.5:
-                self.connections += random.choice(self.model.G.node[self.pos]['agent'])
+    def update_network(self):
+        if self.model.network_type == 'income':
+            self.update_income_network()
+        elif self.model.network_type == 'age':
+            self.update_age_network()
+        elif self.model.network_type == 'income_age':
+            self.update_income_age_network()
+        else:
+            if len(self.connections) < self.model.upper_network_size*2:
+                if random.random() < 0.5:
+                    self.connections.append(random.choice(self.model.G.node[self.pos]['agent']))
 
     def update_income_network(self):
         current_network_size = len(self.connections)
@@ -409,6 +432,27 @@ class Household(Agent):
                     to_choose.append(i)
 
         return to_choose
+    
+    def get_counties_by_price(self, to_choose):
+        for county in to_choose:
+            median_house = self.model.G.node[county]['climate'][14]
+            print(median_house)
+            if self.income < 7:
+                if median_house < self.income:
+                    to_choose.append(county)
+                if self.preference == 4:
+                    for k in range(self.income - median_house):
+                        to_choose.append(county)
+            
+            else:
+                if self.income - median_house < 2:
+                    to_choose.append(county)
+                if self.preference == 4:
+                    if median_house < self.income:
+                        for k in range(self.income - median_house):
+                            to_choose.append(county)
+        
+        return to_choose
 
     def add_climate_counties(self, current_county_climate_rank, to_choose):
         for i in range(current_county_climate_rank):
@@ -425,6 +469,14 @@ class Household(Agent):
         
         return to_choose
 
+    def remove_sea_level_counties(self, to_choose):
+        for county in to_choose:
+            if self.model.G.node[county]['climate'][11] > 0:
+                if random.random() < self.model.G.node[county]['climate'][11]:
+                    to_choose.remove(county)
+        
+        return to_choose
+
     def make_climate_decision(self):
         if random.random() < mean(self.probability):
             to_choose = []
@@ -435,6 +487,7 @@ class Household(Agent):
             else:
                 to_choose = self.get_all_counties(to_choose)
 
+            to_choose = self.get_counties_by_price(to_choose)
             to_choose = self.get_family_counties(to_choose)
             
             self.rank_counties_by_network()
@@ -455,6 +508,8 @@ class Household(Agent):
                 relative_threshold = self.model.climate_threshold[1]
                 if current_county_climate_rank > relative_threshold or self.preference == 1:
                     to_choose = self.add_climate_counties(current_county_climate_rank, to_choose)
+
+            to_choose = self.remove_sea_level_counties(to_choose)
 
             if to_choose:
                 to_move = random.choice(to_choose)
@@ -478,13 +533,13 @@ class Household(Agent):
         self.make_climate_decision()
 
 def create_graph():
-    with open('real_data_dict_slr_house.pickle', 'rb') as node_data_file:
+    with open('pickle/real_data_dict_slr_house.pickle', 'rb') as node_data_file:
         node_data = pickle.load(node_data_file)
 
-    with open('distance_dict.pickle', 'rb') as edge_data_file:
+    with open('pickle/distance_dict.pickle', 'rb') as edge_data_file:
         edge_data = pickle.load(edge_data_file)
 
-    with open('migration_pair_dict.pickle', 'rb') as mig_data_file:
+    with open('pickle/migration_pair_dict.pickle', 'rb') as mig_data_file:
         migration_edge_data = pickle.load(mig_data_file)
 
     G = nx.complete_graph(74)
