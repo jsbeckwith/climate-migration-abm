@@ -72,13 +72,13 @@ def csvToDict_noCumSum(filepath, name):
     return ageData_toMerge
 
 def mergeDicts():
-    ageData = csvToDict('real_data/pcthouseholdagedist.csv', 'age')
-    u25income = csvToDict('real_data/pctincomeu25.csv', 'u25income')
-    income2544 = csvToDict('real_data/pctincome2544.csv', 'income2544')
-    income4564 = csvToDict('real_data/pctincome4564.csv', 'income4564')
-    income65a = csvToDict('real_data/pctincome65a.csv', 'income65a')
+    ageData = csvToDict('pcthouseholdagedist.csv', 'age')
+    u25income = csvToDict('pctincomeu25.csv', 'u25income')
+    income2544 = csvToDict('pctincome2544.csv', 'income2544')
+    income4564 = csvToDict('pctincome4564.csv', 'income4564')
+    income65a = csvToDict('pctincome65a.csv', 'income65a')
     # different method - don't need to cumsum (!)
-    tenure = csvToDict_noCumSum('real_data/ownprobability.csv', 'tenure')
+    tenure = csvToDict_noCumSum('ownprobability.csv', 'tenure')
     """
     rent1534 = csvToDict('test_data/household1534rent.csv', 'rent1534')
     own1534 = csvToDict('test_data/household1534own.csv', 'own1534')
@@ -89,7 +89,7 @@ def mergeDicts():
     # different method - don't need to cumsum (!)
     children = csvToDict_noCumSum('test_data/pcthouseholdu18.csv', 'children')
     """
-    climate = csvToDict_noCumSum('real_data/countychangemonth.csv', 'climate')
+    climate = csvToDict_noCumSum('climate_slr.csv', 'climate')
     bigDict = collections.defaultdict(dict)
     for d in [ageData, u25income, income2544, income4564, income65a, tenure, climate]: # rent1534, own1534, rent3564, own3564, rent65a, own65a, children, climate]:
         for k, v in d.items():
@@ -97,10 +97,10 @@ def mergeDicts():
     return bigDict
 
 def make_pickle():
-    real_data_dict = mergeDicts()
-    print(real_data_dict)
-    with open('real_data_dict.pickle', 'wb') as f:
-        pickle.dump(real_data_dict, f, pickle.DEFAULT_PROTOCOL)
+    real_data_dict_slr_house = mergeDicts()
+    print(real_data_dict_slr_house)
+    with open('real_data_dict_slr_house.pickle', 'wb') as f:
+        pickle.dump(real_data_dict_slr_house, f, pickle.DEFAULT_PROTOCOL)
 
 def get_all_data():
     fips_dict = make_fips_dict('real_data/county_fips.csv')
@@ -118,4 +118,4 @@ def get_population_list():
     return popDict['total_pop_1000']
 
 # get_single_data('B19037', 36, 69, 'elpasoco4565a')
-# make_pickle()
+make_pickle()
