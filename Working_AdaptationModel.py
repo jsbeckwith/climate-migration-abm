@@ -1,6 +1,7 @@
 import random
 import pickle
 from statistics import mean
+import math
 from mesa import Agent, Model
 from mesa.time import SimultaneousActivation
 from mesa.space import NetworkGrid
@@ -8,7 +9,7 @@ from mesa.datacollection import DataCollector
 import networkx as nx
 import numpy as np
 import pandas as pd
-import math
+
 
 # ACCESS NODE OF AGENT BY USING .pos
 # ACCESS AGENTS IN NODE BY USING G.node[n]['agent']
@@ -47,88 +48,156 @@ class ClimateMigrationModel(Model):
                                                             "Total Population": lambda m5: m5.num_agents})
 
     def add_agents(self):
+        """
+        Adds agents based on 2013 ACS population data.
+        """
         cumulative_population_list = get_cumulative_population_list()
         self.county_population_list = get_population_list()
 
-        m = 0
-        i = 0
+        county = 0   # keeps track of which county each agent should be placed in
+        index = 0   # keeps track of each agent's unique_id
 
-        while i < cumulative_population_list[m]:
-            a = Household(i, self)
-            self.grid.place_agent(a, list(self.nodes)[m])
-            self.schedule.add(a)
-
-            a.original_pos = a.pos
-            a.initialize_agent()
+        # keep creating agents until county population is reached
+        while index < cumulative_population_list[county]:
+            # create agent
+            agent = Household(index, self)
+            # place agent in appropriate county
+            self.grid.place_agent(agent, list(self.nodes)[county])
+            # add agent to schedule
+            self.schedule.add(agent)
+            # set agent's original_pos attribute
+            agent.original_pos = agent.pos
+            # initialize all other agent attributes
+            agent.initialize_agent()
+            # if running model with heterogeneous preferences, set agent preference
             if self.preferences:
-                a.initialize_preference()
+                agent.initialize_preference()
 
-            i += 1
+            # update index
+            index += 1
 
-            if i == cumulative_population_list[m] and m < self.num_counties - 1:
-                m += 1
+            # if done with county and not at last county, increase county
+            if index == cumulative_population_list[county] and county < self.num_counties - 1:
+                county += 1
 
+        # after all agents are added, set model attributes
         self.num_agents = cumulative_population_list[self.num_counties-1]
         self.agent_index = cumulative_population_list[self.num_counties-1]
 
     def initialize_all_networks(self):
+        """
+        Initializes random networks for all agents in model.
+        """
         for a in self.schedule.agents:
             a.initialize_network()
 
     def initialize_all_income_networks(self):
+        """
+        Initializes income-based networks for all agents in model.
+        """
         for a in self.schedule.agents:
             a.initialize_income_network()
 
     def initialize_all_age_networks(self):
+        """
+        Initializes age-based networks for all agents in model.
+        """
         for a in self.schedule.agents:
             a.initialize_age_network()
-    
+
     def initialize_all_income_age_networks(self):
+        """
+        Initializes income and age-based networks for all agents in model.
+        """
         for a in self.schedule.agents:
             a.initialize_income_age_network()
 
     def initialize_all_families(self):
+        """
+        Initializes families for all agents in model.
+        """
         for a in self.schedule.agents:
             a.initialize_family()
 
     def update_population(self):
+        """
+        Updates population by adding and removing agents.
+        """
+        # keep track of number of deaths and births per county
         self.deaths = [0]*self.num_counties
         self.births = [0]*self.num_counties
 
-        for a in self.schedule.agents:
+        # remove agents (death)
+        # loop through all agents
+        for agent in self.schedule.agents:
             # source: https://www.ssa.gov/oact/STATS/table4c6.html#ss
-            if random.random() < 0.0001*(math.e**(0.075*a.age)):
-                self.deaths[a.pos] += 1
-                self.grid._remove_agent(a, a.pos)
-                self.schedule.remove(a)
+            # calculate death probability by age in the united states
+            if random.random() < 0.0001*(math.e**(0.075*agent.age)):
+                # keep track of deaths by county
+                self.deaths[agent.pos] += 1
+                # remove agent from model
+                self.grid._remove_agent(agent, agent.pos)
+                # remove agent from schedule
+                self.schedule.remove(agent)
+                # update number of agents
                 self.num_agents -= 1
 
-        for m in range(self.num_counties):
-            # source: https://www.cdc.gov/nchs/fastats/births.htm 
-            current_population = self.county_population_list[m]
+        # add agents (birth)
+        # loop through all counties
+        for county in range(self.num_counties):
+            # source: https://www.cdc.gov/nchs/fastats/births.htm
+            # access current population
+            current_population = self.county_population_list[county]
+            # calculate how many agents should be added
             to_add = current_population//100 # birth rate
+            # update number of agents
             self.num_agents += to_add
+
+            # add specified number of agents
             for i in range(to_add):
-
+                # update agent index
                 self.agent_index += 1
+                # create new agent
+                agent = Household(self.agent_index, self)
+                # place agent in current county
+                self.grid.place_agent(agent, county)
+                # add agent to schedule
+                self.schedule.add(agent)
 
-                a = Household(self.agent_index, self)
-                self.grid.place_agent(a, m)
-                self.schedule.add(a)
+                # initialize agent attributes and networks
+                
+                # agents are assumed to be 18 as that is the lower bound of a householder's age
+                agent.age = 18
+                # based on age, income is assigned
+                agent.initialize_income(random.random())
+                # based on income, tenure is assigned
+                agent.initialize_tenure(random.random())
+                # input-specified network is initialized
+                agent.initialize_network()
+                # family is initialized
+                agent.initialize_family()
+                # original position is set
+                agent.original_pos = agent.pos
+                # keep track of births by county
+                self.births[agent.pos] += 1
 
-                a.original_pos = a.pos
-                a.age = 18
-                a.initialize_agent()
-                a.initialize_network()
-                a.initialize_family()
-
-                self.births[a.pos] += 1
-
-        for n in self.nodes:
-            self.county_population_list[n] = len(self.G.node[n]['agent'])
+        # loop through nodes, update population counts
+        for node in self.nodes:
+            self.county_population_list[node] = len(self.G.node[node]['agent'])
 
     def update_climate(self):
-        # explain numbers ? also, more sophisticated than linear ?
+        """
+        Update climate variables based on NOAA's predictions.
+
+        Index 1 represents number of days above 90 degrees Fahrenheit.
+        Index 4 represents number of days with <1 inches of rain.
+        Index 7 represents number of days without rain.
+        Indexes 3, 6, and 9 are the yearly increases/decreases for these estimates.
+        The update function is a simple linear function.
+        
+        More accurate climate data could be integrated by importing more
+        climate explorer data.
+        """
         for n in self.nodes:
             self.G.node[n]['climate'][1] += self.G.node[n]['climate'][3]
             self.G.node[n]['climate'][4] += self.G.node[n]['climate'][6]
@@ -289,7 +358,7 @@ class Household(Agent):
             if abs(potential_connection.age - self.age) <= 5:
                 if abs(potential_connection.income - self.income) <= 1:
                     self.connections.append(potential_connection)
- 
+
     def initialize_family(self):
         while not self.family:
             if self.income < 8:
@@ -340,7 +409,7 @@ class Household(Agent):
                     potential_connection = random.choice(self.model.G.node[self.pos]['agent'])
                     if abs(potential_connection.income - self.income) <= 1:
                         self.connections.append(potential_connection)
-    
+
     def update_age_network(self):
         current_network_size = len(self.connections)
         if current_network_size < self.model.upper_network_size*2:
@@ -404,9 +473,9 @@ class Household(Agent):
                 if distance < radius:
                     for j in range(3000//distance):
                         to_choose.append(i)
-        
+
         return to_choose
-    
+
     def get_all_counties(self, to_choose):
         for i in range(self.model.num_counties):
             to_choose.append(i)
@@ -420,7 +489,7 @@ class Household(Agent):
                 to_choose.append(self.family[0].pos)
 
         return to_choose
-    
+
     def get_network_counties(self, to_choose):
         for i in range(len(self.counties_by_network)):
 
@@ -432,7 +501,7 @@ class Household(Agent):
                     to_choose.append(i)
 
         return to_choose
-    
+
     def get_counties_by_price(self, to_choose):
         for county in to_choose:
             median_house = self.model.G.node[county]['climate'][14]
@@ -443,7 +512,7 @@ class Household(Agent):
                 if self.preference == 4:
                     for k in range(self.income - median_house):
                         to_choose.append(county)
-            
+
             else:
                 if self.income - median_house < 2:
                     to_choose.append(county)
@@ -451,7 +520,7 @@ class Household(Agent):
                     if median_house < self.income:
                         for k in range(self.income - median_house):
                             to_choose.append(county)
-        
+
         return to_choose
 
     def add_climate_counties(self, current_county_climate_rank, to_choose):
@@ -466,7 +535,7 @@ class Household(Agent):
             county = self.model.county_climate_ranking[i]
             if county in to_choose:
                 to_choose.remove(county)
-        
+
         return to_choose
 
     def remove_sea_level_counties(self, to_choose):
@@ -474,14 +543,14 @@ class Household(Agent):
             if self.model.G.node[county]['climate'][11] > 0:
                 if random.random() < self.model.G.node[county]['climate'][11]:
                     to_choose.remove(county)
-        
+
         return to_choose
 
     def make_climate_decision(self):
         if random.random() < mean(self.probability):
             to_choose = []
             to_move = None
-            
+
             if self.model.limited_radius:
                 to_choose = self.get_counties_in_radius(to_choose)
             else:
@@ -489,7 +558,7 @@ class Household(Agent):
 
             to_choose = self.get_counties_by_price(to_choose)
             to_choose = self.get_family_counties(to_choose)
-            
+
             self.rank_counties_by_network()
 
             to_choose = self.get_network_counties(to_choose)
@@ -497,13 +566,13 @@ class Household(Agent):
             heat = self.model.G.node[self.pos]['climate'][1]
             dry = self.model.G.node[self.pos]['climate'][7]
             current_county_climate_rank = self.model.county_climate_ranking.index(self.pos)
-            
+
             if self.model.climate_threshold[0] == 0:
                 heat_threshold = self.model.climate_threshold[1]
                 dry_threshold = self.model.climate_threshold[2]
                 if heat > heat_threshold and dry > dry_threshold or self.preference == 1:
                     to_choose = self.add_climate_counties(current_county_climate_rank, to_choose)
-            
+
             elif self.model.climate_threshold[0] == 1:
                 relative_threshold = self.model.climate_threshold[1]
                 if current_county_climate_rank > relative_threshold or self.preference == 1:
