@@ -17,13 +17,18 @@ import math
 TICK = 0  # counter for current time step
 
 class ClimateMigrationModel(Model):
-    def __init__(self, num_counties, init_time=0):
+    def __init__(   self, num_counties, preferences=False, network_type='random', \
+                    climate_threshold=[0, 75, 200], limited_radius=True, init_time=0):
         super().__init__()
         global TICK
         TICK = init_time
         self.num_agents = 0
         self.agent_index = 0
+        self.preferences = preferences
+        self.limited_radius = limited_radius
         self.upper_network_size = 3
+        self.network_type = network_type
+        self.climate_threshold = climate_threshold
         self.schedule = SimultaneousActivation(self)
         self.G = create_graph()
         self.num_counties = num_counties
@@ -55,6 +60,9 @@ class ClimateMigrationModel(Model):
 
             a.original_pos = a.pos
             a.initialize_agent()
+            if self.preferences:
+                a.initialize_preference()
+
             i += 1
 
             if i == cumulative_population_list[m] and m < self.num_counties - 1:
@@ -165,6 +173,7 @@ class Household(Agent):
         self.probability = [0] * 3 # age, tenure, children
         self.income = 0
         self.tenure = 0 # 0 = own, 1 = rent
+        self.preference = 0 # 1 = climate, 2 = family, 3 = network, 4 = cost of living
         self.connections = []  # list of all connected agents
         self.family = []
         self.counties_by_network = []
@@ -221,6 +230,9 @@ class Household(Agent):
         tenure_list = self.model.G.node[self.pos]['tenure']
         if rand_num > tenure_list[self.income-1]:
             self.tenure = 1
+
+    def initialize_preference(self):
+        self.preference = random.randint(1, 5)
 
     def initialize_network(self): # initialize age-based network? and then combine for income/age network?
         upper_bound = self.model.upper_network_size
@@ -354,92 +366,107 @@ class Household(Agent):
             self.probability[1] += 0.212
 
         self.probability[2] += random.uniform(-0.1, 0.1)
-        # figure out heuristic for children, household type
-        # random distribution ?
 
     def calculate_adaptive_capacity(self):
-        # how might it change with age, household type?
         self.adaptive_capacity = self.income/10
         if self.age > 65:
             self.adaptive_capacity -= self.age/600
-        # if children, decrease adaptive capacity
-        # if alone, increase
 
-    def make_decision(self):
-        if random.random() < mean(self.probability):
+    def get_counties_in_radius(self, to_choose):
+        radius = (self.adaptive_capacity) * 3000
 
-            to_choose = []
-            to_move = None
-            radius = (self.adaptive_capacity) * 3000
-
-            for i in range(self.model.num_counties):
-                if i != self.pos:
-                    distance = self.model.G.get_edge_data(self.pos, i)['distance']
-                    if distance < radius:
-                        for j in range(3000//distance):
-                            to_choose.append(i)
-
-            self.rank_counties_by_network()
-
-            for i in range(len(self.counties_by_network)):
-                if i != self.pos:
-                    for j in range(self.counties_by_network[i]):
+        for i in range(self.model.num_counties):
+            if i != self.pos:
+                distance = self.model.G.get_edge_data(self.pos, i)['distance']
+                if distance < radius:
+                    for j in range(3000//distance):
                         to_choose.append(i)
+        
+        return to_choose
+    
+    def get_all_counties(self, to_choose):
+        for i in range(self.model.num_counties):
+            to_choose.append(i)
+        return to_choose
 
-            if to_choose:
-                to_move = random.choice(to_choose)
-                self.model.county_influx[self.pos] -= 1
-                self.model.county_influx[to_move] += 1
-                self.model.grid.move_agent(self, to_move)
+    def get_family_counties(self, to_choose):
+        to_choose.append(self.family[0].pos)
+
+        if self.preference == 2:
+            for k in range(3):
+                to_choose.append(self.family[0].pos)
+
+        return to_choose
+    
+    def get_network_counties(self, to_choose):
+        for i in range(len(self.counties_by_network)):
+
+            for j in range(self.counties_by_network[i]):
+                to_choose.append(i)
+
+            if self.preference == 3:
+                for k in range(3):
+                    to_choose.append(i)
+
+        return to_choose
+
+    def add_climate_counties(self, current_county_climate_rank, to_choose):
+        for i in range(current_county_climate_rank):
+            county = self.model.county_climate_ranking[i]
+            if county in to_choose:
+                to_choose.append(county)
+                for j in range(3//(i+1)): # weighted component
+                    to_choose.append(county)
+
+        for i in range(current_county_climate_rank, self.model.num_counties):
+            county = self.model.county_climate_ranking[i]
+            if county in to_choose:
+                to_choose.remove(county)
+        
+        return to_choose
 
     def make_climate_decision(self):
         if random.random() < mean(self.probability):
             to_choose = []
             to_move = None
-            radius = (self.adaptive_capacity) * 3000
+            
+            if self.model.limited_radius:
+                to_choose = self.get_counties_in_radius(to_choose)
+            else:
+                to_choose = self.get_all_counties(to_choose)
 
-            for i in range(self.model.num_counties):
-                if i != self.pos:
-                    distance = self.model.G.get_edge_data(self.pos, i)['distance']
-                    if distance < radius:
-                        for j in range(3000//distance):
-                            to_choose.append(i)
-
+            to_choose = self.get_family_counties(to_choose)
+            
             self.rank_counties_by_network()
 
-            for i in range(len(self.counties_by_network)):
-                if i != self.pos:
-                    for j in range(self.counties_by_network[i]):
-                        to_choose.append(i)
+            to_choose = self.get_network_counties(to_choose)
 
-            # need threshold - otherwise everyone will leave
             heat = self.model.G.node[self.pos]['climate'][1]
             dry = self.model.G.node[self.pos]['climate'][7]
             current_county_climate_rank = self.model.county_climate_ranking.index(self.pos)
-            # if current_county_climate_rank > 50:
-            if heat > 75 and dry > 200:
-                for i in range(current_county_climate_rank):
-                    county = self.model.county_climate_ranking[i]
-                    if county in to_choose:
-                        to_choose.append(county)
-                        for j in range(3//(i+1)): # weighted component
-                            to_choose.append(county)
-
-                for i in range(current_county_climate_rank, self.model.num_counties):
-                    county = self.model.county_climate_ranking[i]
-                    if county in to_choose:
-                        to_choose.remove(county)
+            
+            if self.model.climate_threshold[0] == 0:
+                heat_threshold = self.model.climate_threshold[1]
+                dry_threshold = self.model.climate_threshold[2]
+                if heat > heat_threshold and dry > dry_threshold or self.preference == 1:
+                    to_choose = self.add_climate_counties(current_county_climate_rank, to_choose)
+            
+            elif self.model.climate_threshold[0] == 1:
+                relative_threshold = self.model.climate_threshold[1]
+                if current_county_climate_rank > relative_threshold or self.preference == 1:
+                    to_choose = self.add_climate_counties(current_county_climate_rank, to_choose)
 
             if to_choose:
                 to_move = random.choice(to_choose)
-                self.model.county_influx[self.pos] -= 1
-                self.model.county_influx[to_move] += 1
-                # track migration between counties
-                if self.pos > to_move:
-                    self.model.G[self.pos][to_move]['net_mig'] += 1
-                else:
-                    self.model.G[to_move][self.pos]['net_mig'] -= 1
-                self.model.grid.move_agent(self, to_move)
+                if to_move != self.pos:
+                    self.model.county_influx[self.pos] -= 1
+                    self.model.county_influx[to_move] += 1
+                    # track migration between counties
+                    if self.pos > to_move:
+                        self.model.G[self.pos][to_move]['net_mig'] += 1
+                    else:
+                        self.model.G[to_move][self.pos]['net_mig'] -= 1
+                    self.model.grid.move_agent(self, to_move)
 
     def step(self):
         self.update_age()
@@ -451,7 +478,7 @@ class Household(Agent):
         self.make_climate_decision()
 
 def create_graph():
-    with open('real_data_dict.pickle', 'rb') as node_data_file:
+    with open('real_data_dict_slr_house.pickle', 'rb') as node_data_file:
         node_data = pickle.load(node_data_file)
 
     with open('distance_dict.pickle', 'rb') as edge_data_file:
