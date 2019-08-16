@@ -3,15 +3,21 @@ import sys
 import numpy as np
 import time
 
-steps = 5 # number of time steps to run model
+steps = 47 # number of time steps to run model
 num_counties = 74
+preferences = True
+network_type = 'income_age'
+climate_threshold = [0, 90, 270]
+limited_radius = True
 
-# sys.stdout = open('output47_climate_fix.txt', 'wt')
+sys.stdout = open('income_age_network', 'wt')
+print(preferences, network_type, climate_threshold, limited_radius)
 
-def runClimateMigrationModel(collect_data, filename, network_type):
+def runClimateMigrationModel(collect_data, filename):
     start = time.time()
     # initialize model
-    model = ClimateMigrationModel(num_counties, 0, network_type=network_type)
+    model = ClimateMigrationModel(num_counties=num_counties, preferences=preferences, \
+        network_type=network_type, climate_threshold=climate_threshold, init_time=0)
     print('created model obj')
     model.add_agents()
     print('added agents')
@@ -23,11 +29,16 @@ def runClimateMigrationModel(collect_data, filename, network_type):
     elif network_type == 'income_age':
         model.initialize_all_income_age_networks()
     else:
-        model.initialize_all_networks()
-    print('set ', network_type, ' networks')
+        model.initialize_all_random_networks()
+    print('set', network_type, 'networks')
+    networks_set = time.time()
+    print(networks_set - start)
     model.initialize_all_families()
     print('set family')
+    family_set = time.time()
+    print(family_set - networks_set)
     model_creation = time.time()
+    print('time to initialize model (s):')
     print(model_creation - start)
 
     model.datacollector.collect(model)  # collect initial model state variables
@@ -52,4 +63,4 @@ def runClimateMigrationModel(collect_data, filename, network_type):
 
     print('elapsed time (s):', five_steps - start)
 
-runClimateMigrationModel(False, '0810_heat75_and_dry200', 'random')
+runClimateMigrationModel(True, 'income_age_network')

@@ -84,12 +84,12 @@ class ClimateMigrationModel(Model):
         self.num_agents = cumulative_population_list[self.num_counties-1]
         self.agent_index = cumulative_population_list[self.num_counties-1]
 
-    def initialize_all_networks(self):
+    def initialize_all_random_networks(self):
         """
         Initializes random networks for all agents in model.
         """
         for a in self.schedule.agents:
-            a.initialize_network()
+            a.initialize_random_network()
 
     def initialize_all_income_networks(self):
         """
@@ -603,7 +603,7 @@ class Household(Agent):
                         self.connections.append(potential_connection)
                         potential_connection.connections.append(self)
 
-    def update_age_income_network(self):
+    def update_income_age_network(self):
         """
         Update agent's income and age-based network.
         """
@@ -685,8 +685,8 @@ class Household(Agent):
                     # scaling factor is 2697 to ensure that furthest counties will be added once
                     weight = 2697//distance
                     # if counties are closer than 180 miles, weight defaults to 15
-                    if weight > 15:
-                        weight = 15
+                    if weight > 10:
+                        weight = 10
                     # add counties to list, weighted by distance
                     for count in range(weight):
                         to_choose.append(county)
@@ -746,20 +746,21 @@ class Household(Agent):
         Re-add counties to list of possible counties to migrate
         to based on median house price.
         """
+        unique_to_choose = set(to_choose)
         # loop through all counties in list
-        for county in to_choose:
+        for county in unique_to_choose:
             # access county's median house price
             median_house = self.model.G.node[county]['climate'][14]
-
             # lower-income agents will prioritize lower cost of living more
             if self.income < 7:
                 # re-add county if median house price is less than agent's income
                 if median_house < self.income:
-                    to_choose.append(county)
-                # if preference is low cost of living, re-add county,
-                # weighted by difference between income and house price 
-                if self.preference == 4:
-                    for count in range(self.income - median_house):
+                    # if preference is low cost of living, re-add county,
+                    # weighted by difference between income and house price 
+                    if self.preference == 4:
+                        for count in range(self.income - median_house):
+                            to_choose.append(county)
+                    else:
                         to_choose.append(county)
 
             # higher-income agents will not prioritize lower cost of living as much
@@ -767,8 +768,8 @@ class Household(Agent):
                 # only will re-add if within 2 levels of income
                 if self.income - median_house < 3:
                     to_choose.append(county)
-                # unless preference is low cost of living; then counties are
-                # re-added and weighted by difference between income and house price
+                    # unless preference is low cost of living; then counties are
+                    # re-added and weighted by difference between income and house price
                 if self.preference == 4:
                     if median_house < self.income:
                         for count in range(self.income - median_house):
@@ -806,7 +807,7 @@ class Household(Agent):
             # get county at current index
             county = self.model.county_climate_ranking[index]
             if self.preference != 1:
-                if county in to_choose:
+                while county in to_choose:
                     # remove county with worse climate ranking
                     # (note that remove will only remove one instance
                     # if county appears multiple times)
