@@ -97,10 +97,10 @@ def mergeDicts():
     return bigDict
 
 def make_pickle():
-    real_data_dict_slr_house = mergeDicts()
-    print(real_data_dict_slr_house)
-    with open('real_data_dict_slr_house.pickle', 'wb') as f:
-        pickle.dump(real_data_dict_slr_house, f, pickle.DEFAULT_PROTOCOL)
+    node_data_slr_house = mergeDicts()
+    print(node_data_slr_house)
+    with open('node_data_slr_house.pickle', 'wb') as f:
+        pickle.dump(node_data_slr_house, f, pickle.DEFAULT_PROTOCOL)
 
 def get_all_data():
     fips_dict = make_fips_dict('real_data/county_fips.csv')
