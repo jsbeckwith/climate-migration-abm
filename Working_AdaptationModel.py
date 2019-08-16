@@ -289,9 +289,11 @@ class Household(Agent):
         self.family = []
         self.connected_locations = []
 
+
     ####################################################################################
     #                           INITIALIZATION FUNCTIONS                               #
     ####################################################################################
+
     def initialize_agent(self):
         """
         Initialize all non-network attributes of an agent.
@@ -391,10 +393,28 @@ class Household(Agent):
             self.initialize_income_age_network()
         # initialize random network
         else:
-            # TODO: make reciprocal?
-            upper_bound = self.model.upper_network_size
-            self.connections = random.sample(self.model.G.node[self.pos]['agent'], upper_bound)
-            self.connections += random.sample(self.model.schedule.agents, random.randint(1, upper_bound))
+            self.initialize_random_network()
+
+    def initialize_random_network(self):
+        """
+        Initialize random network.
+        """
+        # get maximum network size
+        upper_bound = self.model.upper_network_size
+        # while network size is below maximum, find agents in same county
+        while len(self.connections) < upper_bound:
+            # choose a random agent from the same county
+            connection = random.choice(self.model.G.node[self.pos]['agent'])
+            # connect agents
+            self.connections.append(connection)
+            connection.connections.append(self)
+        # while network size is below maximum, find agents in any county
+        while len(self.connections) < upper_bound + random.randint(1, upper_bound):
+            # choose a random agent from all counties
+            connection = random.choice(self.model.schedule.agents)
+            # connect agents
+            self.connections.append(connection)
+            connection.connections.append(self)
 
     def initialize_income_network(self):
         """
@@ -488,9 +508,11 @@ class Household(Agent):
                 self.family.append(potential_family)
                 potential_family.family.append(self)
 
+
     ####################################################################################
     #                                 UPDATE FUNCTIONS                                 #
     ####################################################################################
+
     def update_age(self):
         """
         Update age.
@@ -530,12 +552,22 @@ class Household(Agent):
             self.update_age_network()
         elif self.model.network_type == 'income_age':
             self.update_income_age_network()
-        # update random networks
         else:
-            # if network isn't too big, there is a 30% chance of adding a new agent
-            if len(self.connections) < self.model.upper_network_size*4:
-                if random.random() < 0.3:
-                    self.connections.append(random.choice(self.model.G.node[self.pos]['agent']))
+            self.update_random_network()
+            
+
+    def update_random_network(self):
+        """
+        Update agent's random network.
+        """
+        # if network isn't too big, there is a 30% chance of adding a new agent
+        if len(self.connections) < self.model.upper_network_size*4:
+            if random.random() < 0.3:
+                # randomly choose agent in same county
+                connection = random.choice(self.model.G.node[self.pos]['agent'])
+                # connect agents
+                self.connections.append(connection)
+                connection.connections.append(self)
 
     def update_income_network(self):
         """
@@ -550,6 +582,7 @@ class Household(Agent):
                 while len(self.connections) < current_network_size+1:
                     potential_connection = random.choice(self.model.G.node[self.pos]['agent'])
                     if abs(potential_connection.income - self.income) <= 1:
+                        # connect agents
                         self.connections.append(potential_connection)
                         potential_connection.connections.append(self)
 
@@ -566,6 +599,7 @@ class Household(Agent):
                 while len(self.connections) < current_network_size+1:
                     potential_connection = random.choice(self.model.G.node[self.pos]['agent'])
                     if abs(potential_connection.age - self.age) <= 5:
+                        # connect agents
                         self.connections.append(potential_connection)
                         potential_connection.connections.append(self)
 
@@ -583,8 +617,10 @@ class Household(Agent):
                     potential_connection = random.choice(self.model.G.node[self.pos]['agent'])
                     if abs(potential_connection.age - self.age) <= 5:
                         if abs(potential_connection.income - self.income) <= 1:
+                            # connect agents
                             self.connections.append(potential_connection)
                             potential_connection.connections.append(self)
+
 
     ####################################################################################
     #                          MIGRATION DECISION FUNCTIONS                            #
@@ -881,9 +917,11 @@ class Household(Agent):
                     # move agent to new county
                     self.model.grid.move_agent(self, to_move)
 
+
     ####################################################################################
     #                                   STEP FUNCTIONS                                 #
     ####################################################################################
+
     def step(self):
         """
         Before migration decision, update agents' attributes.
@@ -899,6 +937,8 @@ class Household(Agent):
         (Simultaneous activation)
         """
         self.make_migration_decision()
+
+
 
 ####################################################################################
 #                               DATA ACCESS FUNCTIONS                              #
