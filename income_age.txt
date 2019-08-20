@@ -1,0 +1,4 @@
+True income_age [1, 51]
+created model obj
+added agents
+34877

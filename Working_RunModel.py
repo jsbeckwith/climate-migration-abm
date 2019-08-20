@@ -3,20 +3,11 @@ import sys
 import numpy as np
 import time
 
-steps = 47 # number of time steps to run model
-num_counties = 74
-preferences = True
-network_type = 'income_age'
-climate_threshold = [0, 90, 270]
-limited_radius = True
-
-sys.stdout = open('income_age_network', 'wt')
-print(preferences, network_type, climate_threshold, limited_radius)
-
-def runClimateMigrationModel(collect_data, filename):
+def runClimateMigrationModel(collect_data, filename, preferences, network_type, climate_threshold, init_time):
+    print(preferences, network_type, climate_threshold)
     start = time.time()
     # initialize model
-    model = ClimateMigrationModel(num_counties=num_counties, preferences=preferences, \
+    model = ClimateMigrationModel(num_counties=74, preferences=preferences, \
         network_type=network_type, climate_threshold=climate_threshold, init_time=0)
     print('created model obj')
     model.add_agents()
@@ -44,7 +35,7 @@ def runClimateMigrationModel(collect_data, filename):
     model.datacollector.collect(model)  # collect initial model state variables
     step1 = model_creation
     model.update_income_counts()
-    for i in range(steps):
+    for i in range(47):
         print('step', i)
         model.step()
         step2 = time.time()
@@ -55,6 +46,8 @@ def runClimateMigrationModel(collect_data, filename):
     five_steps = time.time()
 
     print(model.G.edges(data=True)) # figure out how to export
+    model.get_preference_distribution()
+
     if collect_data:
         model_attributes = model.datacollector.get_model_vars_dataframe()  # store model level state variables in dataframe
         model_attributes.to_csv('output/' + filename + '.csv')
@@ -63,4 +56,20 @@ def runClimateMigrationModel(collect_data, filename):
 
     print('elapsed time (s):', five_steps - start)
 
-runClimateMigrationModel(True, 'income_age_network')
+def single_run():
+    sys.stdout = open('51_income_age.txt', 'wt')
+    runClimateMigrationModel(True, 'income_age', preferences=True, network_type='income_age', climate_threshold=[1, 51], init_time= 0)
+
+def multiple_run():
+    sys.stdout = open('multi_run.txt', 'wt')
+    threshold_list = [36, 51, 66]
+    for threshold in threshold_list:
+        climate_threshold = [1, threshold]
+        filename = 'relative_'
+        for i in range(10):
+            filename += str(threshold)
+            filename += str(i)
+            print('RUN', i,)
+            runClimateMigrationModel(True, filename, True, 'random', climate_threshold, init_time=0)
+
+single_run()

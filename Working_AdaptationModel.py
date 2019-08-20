@@ -176,6 +176,8 @@ class ClimateMigrationModel(Model):
                 agent.initialize_network()
                 # family is initialized
                 agent.initialize_family()
+                if self.preferences:
+                    agent.initialize_preference()
                 # original position is set
                 agent.original_pos = agent.pos
                 # keep track of births by county
@@ -253,6 +255,16 @@ class ClimateMigrationModel(Model):
             self.county_income[agent.pos][agent.income-1] += 1
         # income counts are printed at the beginning and end of run
         print(self.county_income)
+
+    def get_preference_distribution(self):
+        """
+        TODO: docstring
+        """
+        preference_list = [0]*5
+        for agent in self.schedule.agents:
+            preference_list[agent.preference] += 1
+        print(preference_list)
+
 
     def step(self):
         """
@@ -379,7 +391,7 @@ class Household(Agent):
 
     def initialize_preference(self):
         # TODO: preference distribution, docstring, comments
-        self.preference = random.randint(1, 5)
+        self.preference = random.randint(1, 4)
 
     def initialize_network(self):
         """
@@ -525,15 +537,23 @@ class Household(Agent):
         """
         if self.age == 26:
             # randomly update income, with a skew towards upward mobility
-            if self.income < 3:
-                self.income += random.randint(-1, 5)
+            if self.income > 5 and self.income < 9:
+                self.income += random.randint(0, 2)
+            if self.income == 4 or self.income == 5:
+                self.income += random.randint(-2, 4)
+            if self.income == 3:
+                self.income += random.randint(-2, 5)
+            if self.income == 2:
+                self.income += random.randint(-1, 6)
+            if self.income == 1:
+                self.income += random.randint(0, 4)
             # linear relationship between income and tenure, according to ACS data
             if self.income * 0.0715 > random.random():
                 self.tenure = 0
         elif self.age == 46:
             # randomly update income, with a slight skew towards upward mobility
             if self.income == 7:
-                self.income += random.randint(-1, 2)
+                self.income += random.randint(-1, 3)
                 # if income updated, update tenure as well
                 if self.income * 0.0715 > random.random():
                     self.tenure = 0
@@ -766,7 +786,7 @@ class Household(Agent):
             # higher-income agents will not prioritize lower cost of living as much
             else:
                 # only will re-add if within 2 levels of income
-                if self.income - median_house < 3:
+                if abs(self.income - median_house) < 3:
                     to_choose.append(county)
                     # unless preference is low cost of living; then counties are
                     # re-added and weighted by difference between income and house price
@@ -782,41 +802,46 @@ class Household(Agent):
         Re-add and remove counties to list of possible counties to migrate
         to based on climate data.
         """
-        # loop through all counties with better climate than 
-        # agent's current climate
-        for index in range(current_county_climate_rank):
-            # get county at current index
-            county = self.model.county_climate_ranking[index]
-            # if agent doesn't care about climate, don't weight as heavily
-            # and only re-add counties that are already in the list
-            if self.preference != 1:
-                if county in to_choose:
-                    to_choose.append(county)
-                    # weight top three counties
-                    for count in range(3//(index+1)): 
+        if current_county_climate_rank > 15:
+            # loop through all counties with better climate than 
+            # agent's current climate
+            for index in range(current_county_climate_rank):
+                # get county at current index
+                county = self.model.county_climate_ranking[index]
+                # if agent doesn't care about climate, don't weight as heavily
+                # and only re-add counties that are already in the list
+                if self.preference != 1:
+                    if county in to_choose:
                         to_choose.append(county)
-            # if agent does care about climate, weight top 7 counties
-            # and add counties that weren't previously in list
-            elif self.preference == 1:
-                for count in range(7//(index+1)):
-                    to_choose.append(county)
+                        # weight top three counties
+                        for count in range(3//(index+1)): 
+                            to_choose.append(county)
+                # if agent does care about climate, weight top 7 counties
+                # and add counties that weren't previously in list
+                elif self.preference == 1:
+                    for count in range(7//(index+1)):
+                        to_choose.append(county)
 
-        # loop through all counties with worse climate than
-        # agent's current climate
-        for index in range(current_county_climate_rank, self.model.num_counties):
-            # get county at current index
-            county = self.model.county_climate_ranking[index]
-            if self.preference != 1:
-                while county in to_choose:
-                    # remove county with worse climate ranking
-                    # (note that remove will only remove one instance
-                    # if county appears multiple times)
-                    to_choose.remove(county)
-            # if agent cares about climate, remove all instances of
-            # counties with worse climate
-            elif self.preference == 1:
-                while county in to_choose:
-                    to_choose.remove(county)
+            # loop through all counties with worse climate than
+            # agent's current climate
+            for index in range(current_county_climate_rank, self.model.num_counties):
+                # get county at current index
+                county = self.model.county_climate_ranking[index]
+                if self.preference != 1:
+                    if random.random() < 0.5:
+                        while county in to_choose:
+                            # remove county with worse climate ranking
+                            # (note that remove will only remove one instance
+                            # if county appears multiple times)
+                            to_choose.remove(county)
+                    else:
+                        if county in to_choose:
+                            to_choose.remove(county)
+                # if agent cares about climate, remove all instances of
+                # counties with worse climate
+                elif self.preference == 1:
+                    while county in to_choose:
+                        to_choose.remove(county)
 
         return to_choose
 

@@ -44,7 +44,7 @@ def get_data(fips_dict, table_code, start_shell, end_shell, name):
 
 def get_single_data(table_code, start_shell, end_shell, name):
     shells = createShells(table_code, start_shell, end_shell)
-    data = censusdata.download('acs5', 2013, censusdata.censusgeo([('state', '08'), ('county', '041')]), shells)
+    data = censusdata.download('acs5', 2013, censusdata.censusgeo([('state', '12'), ('county', '095')]), shells)
     data.to_csv('raw_' + name + '.csv')
 
 def make_fips_dict(filepath):
@@ -117,5 +117,5 @@ def get_population_list():
     popDict = populationData.to_dict('list')
     return popDict['total_pop_1000']
 
-# get_single_data('B19037', 36, 69, 'elpasoco4565a')
+# get_single_data('B25118', 1, 25, 'orangefltenure')
 make_pickle()
