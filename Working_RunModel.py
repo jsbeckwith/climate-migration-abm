@@ -45,31 +45,30 @@ def runClimateMigrationModel(collect_data, filename, preferences, network_type, 
 
     five_steps = time.time()
 
-    print(model.G.edges(data=True)) # figure out how to export
-    model.get_preference_distribution()
-
     if collect_data:
         model_attributes = model.datacollector.get_model_vars_dataframe()  # store model level state variables in dataframe
         model_attributes.to_csv('output/' + filename + '.csv')
         model_attributes['County Influx'].to_csv('output/'+ filename + '_flux.csv')
         model_attributes['County Population'].to_csv('output/' + filename + '_pop.csv')
-
+    
+    print(model.G.edges(data=True)) # figure out how to export
+    model.get_preference_distribution()
+    
     print('elapsed time (s):', five_steps - start)
 
 def single_run():
-    sys.stdout = open('51_income_age.txt', 'wt')
-    runClimateMigrationModel(True, 'income_age', preferences=True, network_type='income_age', climate_threshold=[1, 51], init_time= 0)
+    sys.stdout = open('clim_pref.txt', 'wt')
+    runClimateMigrationModel(True, 'clim_pref', preferences=True, network_type='random', climate_threshold=[1, 51], init_time= 0)
 
-def multiple_run():
-    sys.stdout = open('multi_run.txt', 'wt')
-    threshold_list = [36, 51, 66]
-    for threshold in threshold_list:
-        climate_threshold = [1, threshold]
-        filename = 'relative_'
-        for i in range(10):
-            filename += str(threshold)
-            filename += str(i)
-            print('RUN', i,)
-            runClimateMigrationModel(True, filename, True, 'random', climate_threshold, init_time=0)
+def multiple_run_network():
+    sys.stdout = open('no_pref_51', 'wt')
+    # threshold_list = [[0, 50, 200], [0, 100, 250], [0, 200, 300]]
+    # network_list = ['income', 'age', 'income_age']
+    # for network in network_list:
+    for i in range(10):
+        filename = 'no_pref_'
+        filename += str(i)
+        print('RUN', i,)
+        runClimateMigrationModel(True, filename, False, 'random', [1, 51], init_time=0)
 
-single_run()
+multiple_run_network()

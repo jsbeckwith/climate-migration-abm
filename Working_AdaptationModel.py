@@ -18,8 +18,8 @@ import pandas as pd
 TICK = 0  # counter for current time step
 
 class ClimateMigrationModel(Model):
-    def __init__(   self, num_counties, preferences=False, network_type='random', \
-                    climate_threshold=[0, 75, 200], limited_radius=True, init_time=0):
+    def __init__(   self, num_counties, preferences, network_type, \
+                    climate_threshold, limited_radius=True, init_time=0):
         super().__init__()
         global TICK
         TICK = init_time
@@ -801,8 +801,9 @@ class Household(Agent):
         """
         Re-add and remove counties to list of possible counties to migrate
         to based on climate data.
+        TODO: rewrite comments
         """
-        if current_county_climate_rank > 15:
+        if current_county_climate_rank > 15 or self.preference == 1:
             # loop through all counties with better climate than 
             # agent's current climate
             for index in range(current_county_climate_rank):
@@ -833,9 +834,6 @@ class Household(Agent):
                             # remove county with worse climate ranking
                             # (note that remove will only remove one instance
                             # if county appears multiple times)
-                            to_choose.remove(county)
-                    else:
-                        if county in to_choose:
                             to_choose.remove(county)
                 # if agent cares about climate, remove all instances of
                 # counties with worse climate
