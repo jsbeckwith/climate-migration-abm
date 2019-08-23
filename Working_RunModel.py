@@ -8,7 +8,7 @@ def runClimateMigrationModel(collect_data, filename, preferences, network_type, 
     start = time.time()
     # initialize model
     model = ClimateMigrationModel(num_counties=74, preferences=preferences, \
-        network_type=network_type, climate_threshold=climate_threshold, init_time=0)
+        network_type=network_type, climate_threshold=climate_threshold, limited_radius=True, init_time=0)
     print('created model obj')
     model.add_agents()
     print('added agents')
@@ -57,18 +57,19 @@ def runClimateMigrationModel(collect_data, filename, preferences, network_type, 
     print('elapsed time (s):', five_steps - start)
 
 def single_run():
-    sys.stdout = open('clim_pref.txt', 'wt')
-    runClimateMigrationModel(True, 'clim_pref', preferences=True, network_type='random', climate_threshold=[1, 51], init_time= 0)
+    sys.stdout = open('clim_noagentpref.txt', 'wt')
+    runClimateMigrationModel(True, 'clim_noagentpref', preferences=False, network_type='random', climate_threshold=[1, 51], init_time= 0)
 
 def multiple_run_network():
-    sys.stdout = open('no_pref_51', 'wt')
+    sys.stdout = open('final_network_multi', 'wt')
     # threshold_list = [[0, 50, 200], [0, 100, 250], [0, 200, 300]]
-    # network_list = ['income', 'age', 'income_age']
-    # for network in network_list:
-    for i in range(10):
-        filename = 'no_pref_'
-        filename += str(i)
-        print('RUN', i,)
-        runClimateMigrationModel(True, filename, False, 'random', [1, 51], init_time=0)
+    network_list = ['income', 'age', 'income_age']
+    for network in network_list:
+        for i in range(1):
+            filename = 'final_network'
+            filename += network
+            filename += str(i)
+            print('RUN', i,)
+            runClimateMigrationModel(True, filename, True, network, [1, 51], init_time=0)
 
 multiple_run_network()

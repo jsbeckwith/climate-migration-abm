@@ -803,7 +803,7 @@ class Household(Agent):
         to based on climate data.
         TODO: rewrite comments
         """
-        if current_county_climate_rank > 15 or self.preference == 1:
+        if current_county_climate_rank > 15:
             # loop through all counties with better climate than 
             # agent's current climate
             for index in range(current_county_climate_rank):
@@ -823,23 +823,23 @@ class Household(Agent):
                     for count in range(7//(index+1)):
                         to_choose.append(county)
 
-            # loop through all counties with worse climate than
-            # agent's current climate
-            for index in range(current_county_climate_rank, self.model.num_counties):
-                # get county at current index
-                county = self.model.county_climate_ranking[index]
-                if self.preference != 1:
-                    if random.random() < 0.5:
-                        while county in to_choose:
-                            # remove county with worse climate ranking
-                            # (note that remove will only remove one instance
-                            # if county appears multiple times)
-                            to_choose.remove(county)
-                # if agent cares about climate, remove all instances of
-                # counties with worse climate
-                elif self.preference == 1:
+        # loop through all counties with worse climate than
+        # agent's current climate
+        for index in range(current_county_climate_rank, self.model.num_counties):
+            # get county at current index
+            county = self.model.county_climate_ranking[index]
+            if self.preference != 1:
+                if random.random() < 0.75:
                     while county in to_choose:
+                        # remove county with worse climate ranking
+                        # (note that remove will only remove one instance
+                        # if county appears multiple times)
                         to_choose.remove(county)
+            # if agent cares about climate, remove all instances of
+            # counties with worse climate
+            elif self.preference == 1:
+                while county in to_choose:
+                    to_choose.remove(county)
 
         return to_choose
 
